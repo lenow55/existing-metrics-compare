@@ -1,0 +1,100 @@
+import numpy as np
+import numpy.typing as npt
+import plotly.graph_objects as go
+from sklearn.metrics import (
+    auc,
+    average_precision_score,
+    precision_recall_curve,
+    roc_curve,
+)
+
+
+def plot_pr_binary(
+    y_true: npt.NDArray[np.int64],
+    y_score: npt.NDArray[np.float32],
+    class_name: str = "Positive Class",
+) -> tuple[go.Figure, float]:
+    fig_pr = go.Figure()
+
+    # 1. Вычисляем метрики для единственного класса
+    precision, recall, _ = precision_recall_curve(y_true, y_score)
+    ap = average_precision_score(y_true, y_score)
+
+    # 2. Добавляем кривую на график
+    fig_pr = fig_pr.add_trace(
+        go.Scatter(
+            x=recall,
+            y=precision,
+            name=f"{class_name} (AP={ap:.3f})",
+            mode="lines",
+            line=dict(color="navy", width=3),
+        )
+    )
+
+    # 3. Настраиваем внешний вид
+    fig_pr = fig_pr.update_layout(
+        title="PR кривая",
+        xaxis_title="Полнота",
+        yaxis_title="Точность",
+        xaxis=dict(range=[0.0, 1.0]),
+        yaxis=dict(range=[0.0, 1.05]),
+        template="plotly_white",  # Базовый белый шаблон
+        plot_bgcolor="white",  # Внутренний фон (где рисуются линии)
+        paper_bgcolor="white",  # Внешний фон (где заголовки и легенда)
+        width=900,
+        height=700,
+    )
+
+    return fig_pr, float(ap)
+
+
+def plot_roc_auc_binary(
+    y_true: npt.NDArray[np.int64],
+    y_score: npt.NDArray[np.float32],
+    class_name: str = "Positive Class",
+) -> tuple[go.Figure, float]:
+    fig_roc = go.Figure()
+
+    # 1. Считаем метрики для единственного класса
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    roc_auc = auc(fpr, tpr)
+
+    # 2. Строим ROC-кривую
+    fig_roc = fig_roc.add_trace(
+        go.Scatter(
+            x=fpr,
+            y=tpr,
+            name=f"{class_name} (AUC={roc_auc:.3f})",
+            mode="lines",
+            line=dict(color="deeppink", width=3),
+        )
+    )
+
+    # 3. Добавляем диагональную линию (случайное угадывание)
+    fig_roc = fig_roc.add_trace(
+        go.Scatter(
+            x=[0, 1],
+            y=[0, 1],
+            mode="lines",
+            line=dict(color="black", dash="dash"),
+            showlegend=False,
+        )
+    )
+
+    # 4. Настраиваем внешний вид с максимально белым фоном
+    fig_roc = fig_roc.update_layout(
+        title="ROC-кривая",
+        xaxis_title="False Positive Rate",
+        yaxis_title="True Positive Rate",
+        # Настройки осей для белого фона
+        xaxis=dict(range=[0.0, 1.0]),
+        yaxis=dict(range=[0.0, 1.05]),
+        width=900,
+        height=700,
+        # Шаблон и цвета фона
+        template="plotly_white",
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+    )
+
+    return fig_roc, float(roc_auc)
