@@ -49,6 +49,7 @@ async def main():
     )
 
     config = init_config(conf_type=AppSettings, task=c_task)
+    random_state = np.random.RandomState(seed=config.seed)
     configure_logging(config.logging_conf_file)
 
     client = create_openai_client(config=config.embed)
@@ -67,6 +68,8 @@ async def main():
     qa_dataset = pd.read_csv(qa_set_file, index_col=0)
     qa_dataset.index = qa_dataset.index.astype(int)
     logger.info(f"QA readed from {qa_set_file} shape: {qa_dataset.shape}")
+    if config.count > 0:
+        qa_dataset = qa_dataset.sample(n=config.count, random_state=random_state)
 
     tasks: list[asyncio.Task[EvalOut]] = []
     for idx, row in qa_dataset.iterrows():

@@ -18,6 +18,7 @@ class AppSettings(BaseSettings):
     logging_conf_file: str
     embed: EmbedLLMConfig
     count: int = Field(default=-1, description="количество для обработки")
+    seed: int = Field(default=42)
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         json_file=(FILE_ROOT / "config.json")
     )
