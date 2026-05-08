@@ -1,0 +1,37 @@
+[project]
+name = "existing-metrics-compare"
+version = "0.1.0"
+description = ""
+authors = [{ name = "INovikov Home", email = "nov.ilucha@yandex.ru" }]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "ipykernel (>=7.2.0,<8.0.0)",
+  "ragas (>=0.4.3,<0.5.0)",
+  "pandas (>=3.0.2,<4.0.0)",
+  "openai (>=2.34.0,<3.0.0)",
+  "ipywidgets (>=8.1.8,<9.0.0)",
+  "clearml (>=2.1.6,<3.0.0)",
+  "plotly (>=6.7.0,<7.0.0)",
+  "nbformat (>=5.10.4,<6.0.0)",
+  "torch (>=2.10.0,<3.0.0)",
+  "pandas-stubs (>=3.0.0.260204,<4.0.0.0)",
+  "scikit-learn (>=1.8.0,<2.0.0)",
+  "scikit-learn-stubs (>=0.0.3,<0.0.4)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{ include = "src" }]
+
+[[tool.poetry.source]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+
+[tool.poetry.dependencies]
+torch = { source = "pytorch_cpu" }
