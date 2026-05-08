@@ -5,7 +5,7 @@ import traceback
 
 import numpy as np
 import pandas as pd
-from clearml import Dataset, Task
+from clearml import Dataset, Task, TaskTypes
 from openai import AsyncOpenAI
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
@@ -44,8 +44,10 @@ async def stage_task(
 
 
 async def main():
-    c_task: Task = Task.create(
-        project_name="RAG_Metrics", task_name="SemSim evaluation", task_type="testing"
+    c_task: Task = Task.init(
+        project_name="RAG_Metrics",
+        task_name="SemSim evaluation",
+        task_type=TaskTypes.testing,
     )
 
     config = init_config(conf_type=AppSettings, task=c_task)
@@ -220,7 +222,8 @@ async def main():
         xlabels=target_names,
         ylabels=target_names,
     )
-    _ = c_task.flush()
+    _ = c_task.flush(wait_for_uploads=True)
+    _ = c_task.mark_completed(status_message="completed")
     c_task.close()
 
 
