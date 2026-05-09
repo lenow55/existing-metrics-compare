@@ -18,7 +18,7 @@ from src.utils.base import (
 )
 from src.utils.report import log_bin_report
 from src.utils.startup import init_config
-from src.utils.visual import plot_pr_binary, plot_roc_auc_binary
+from src.utils.visual import plot_pr_binary, plot_roc_auc_binary, plot_true_lie_distrib
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +231,22 @@ async def main():
             "yaxis": {"tickfont": {"size": 11}},
         },
     )
+
+    # INFO: 5. Распределение Реально правильных и неправильных
+    # с трэшхолдом
+    # Create distplot with curve_type set to 'normal'
+    fig_dist = plot_true_lie_distrib(
+        y_true=y_true,
+        y_score=y_score,
+        eval_ids=qa_result.index.values,
+        target_names=["Истина", "Ложь"],
+    )
+    logger_c.report_plotly(
+        title="SS Report",
+        series="Распределение",
+        figure=fig_dist,
+    )
+
     _ = c_task.flush(wait_for_uploads=True)
     _ = c_task.mark_completed(status_message="completed")
     c_task.close()

@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.typing as npt
+import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from sklearn.metrics import (
     auc,
@@ -98,3 +99,33 @@ def plot_roc_auc_binary(
     )
 
     return fig_roc, float(roc_auc)
+
+
+def plot_true_lie_distrib(
+    y_true: npt.NDArray[np.int64],
+    y_score: npt.NDArray[np.float32],
+    eval_ids: npt.NDArray[np.str_],
+    target_names: list[str],
+    show_hist: bool = False,
+):
+    true_idx = np.flatnonzero(y_true)
+    bad_idx = np.argwhere(y_true == 0)
+    fig = ff.create_distplot(
+        [y_score[true_idx], y_score[bad_idx]],
+        target_names,
+        curve_type="kde",
+        # curve_type="normal",  # override default 'kde'
+        bin_size=0.01,
+        rug_text=[eval_ids[true_idx], eval_ids[bad_idx]],
+        show_hist=show_hist,
+    )
+
+    # Add title
+    fig = fig.update_layout(title_text="Распределение близости ответов")
+    # 3. Настраиваем ширину, высоту и другие параметры макета
+    fig = fig.update_layout(
+        width=1200,  # Ширина в пикселях
+        height=600,  # Высота в пикселях
+        margin=dict(l=50, r=50, t=50, b=50),  # Отступы от краев (опционально)
+    )
+    return fig
