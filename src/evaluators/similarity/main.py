@@ -162,7 +162,9 @@ async def main():
         y_pred,
         target_names=target_names,
     )
-    logger.info(test_report)
+    if isinstance(test_report, str):
+        logger.info("\n" + test_report)
+
     test_report_d = classification_report(
         y_true,
         y_pred,
