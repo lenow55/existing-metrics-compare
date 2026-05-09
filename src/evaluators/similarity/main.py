@@ -46,9 +46,11 @@ async def stage_task(
 async def main():
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
-        task_name="SemSim evaluation",
+        task_name="Cosine SemSim evaluation",
         task_type=TaskTypes.testing,
+        tags=["eval", "CosSS", "embed"],
     )
+    c_task.set_comment("Мета оценка метрики семантического сходства")
 
     config = init_config(conf_type=AppSettings, task=c_task)
     random_state = np.random.RandomState(seed=config.seed)
@@ -221,6 +223,13 @@ async def main():
         yaxis="Реальность",
         xlabels=target_names,
         ylabels=target_names,
+        extra_layout={
+            "colorscale": "YlOrRd",
+            "textfont": {"size": 16},
+            "font": {"size": 13},
+            "xaxis": {"tickfont": {"size": 11}},
+            "yaxis": {"tickfont": {"size": 11}},
+        },
     )
     _ = c_task.flush(wait_for_uploads=True)
     _ = c_task.mark_completed(status_message="completed")
