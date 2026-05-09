@@ -225,7 +225,10 @@ async def main():
         xlabels=target_names,
         ylabels=target_names,
         extra_layout={
+            "texttemplate": "%{z}",
             "colorscale": "blues",
+            "textfont": {"size": 24},
+            "font": {"size": 16},
         },
     )
 
