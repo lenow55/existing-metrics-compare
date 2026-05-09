@@ -226,7 +226,13 @@ async def main():
         ylabels=target_names,
         extra_layout={
             "texttemplate": "%{z}",
-            "colorscale": "blues",
+            "colorscale": [
+                [0.00, "white"],
+                [0.40, "white"],  # до ~65% диапазона чисел — почти белый
+                [0.65, "rgb(220,235,250)"],
+                [0.75, "rgb(140,185,225)"],
+                [1.00, "rgb(40,100,170)"],
+            ],
             "textfont": {"size": 24},
             "font": {"size": 16},
         },

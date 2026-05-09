@@ -42,8 +42,6 @@ def plot_pr_binary(
         template="plotly_white",  # Базовый белый шаблон
         plot_bgcolor="white",  # Внутренний фон (где рисуются линии)
         paper_bgcolor="white",  # Внешний фон (где заголовки и легенда)
-        width=900,
-        height=700,
     )
 
     return fig_pr, float(ap)
@@ -90,8 +88,6 @@ def plot_roc_auc_binary(
         # Настройки осей для белого фона
         xaxis=dict(range=[0.0, 1.0]),
         yaxis=dict(range=[0.0, 1.05]),
-        width=900,
-        height=700,
         # Шаблон и цвета фона
         template="plotly_white",
         plot_bgcolor="white",
@@ -124,8 +120,6 @@ def plot_true_lie_distrib(
     fig = fig.update_layout(title_text="Распределение близости ответов")
     # 3. Настраиваем ширину, высоту и другие параметры макета
     fig = fig.update_layout(
-        width=900,
-        height=700,
         margin=dict(l=50, r=50, t=50, b=50),  # Отступы от краев (опционально)
     )
     return fig
