@@ -49,6 +49,7 @@ async def main():
         task_name="Cosine SemSim evaluation",
         task_type=TaskTypes.testing,
         tags=["eval", "CosSS", "embed"],
+        reuse_last_task_id=False,
     )
     c_task.set_comment("Мета оценка метрики семантического сходства")
 
