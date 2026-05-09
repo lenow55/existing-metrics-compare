@@ -224,11 +224,7 @@ async def main():
         xlabels=target_names,
         ylabels=target_names,
         extra_layout={
-            "colorscale": "YlOrRd",
-            "textfont": {"size": 16},
-            "font": {"size": 13},
-            "xaxis": {"tickfont": {"size": 11}},
-            "yaxis": {"tickfont": {"size": 11}},
+            "colorscale": "blues",
         },
     )
 
@@ -243,7 +239,7 @@ async def main():
     )
     logger_c.report_plotly(
         title="SS Report",
-        series="Распределение",
+        series="Распределение близости ответов",
         figure=fig_dist,
     )
 

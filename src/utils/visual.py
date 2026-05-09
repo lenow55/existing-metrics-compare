@@ -109,7 +109,7 @@ def plot_true_lie_distrib(
     show_hist: bool = False,
 ):
     true_idx = np.flatnonzero(y_true)
-    bad_idx = np.argwhere(y_true == 0)
+    bad_idx = np.argwhere(y_true == 0).flatten()
     fig = ff.create_distplot(
         [y_score[true_idx], y_score[bad_idx]],
         target_names,
@@ -124,8 +124,8 @@ def plot_true_lie_distrib(
     fig = fig.update_layout(title_text="Распределение близости ответов")
     # 3. Настраиваем ширину, высоту и другие параметры макета
     fig = fig.update_layout(
-        width=1200,  # Ширина в пикселях
-        height=600,  # Высота в пикселях
+        width=900,
+        height=700,
         margin=dict(l=50, r=50, t=50, b=50),  # Отступы от краев (опционально)
     )
     return fig
