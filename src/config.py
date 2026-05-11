@@ -17,6 +17,7 @@ class LLMParams(TypedDict):
     presence_penalty: NotRequired[float]
     top_p: NotRequired[float]
     max_tokens: NotRequired[int]
+    max_retries: NotRequired[int]
 
 
 class EmbedParams(TypedDict):

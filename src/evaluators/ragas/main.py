@@ -1,32 +1,20 @@
-from ragas.dataset_schema import SingleTurnSample
-from ragas.metrics.collections import Faithfulness
-
-sample = SingleTurnSample(
-    user_input="When was the first super bowl?",
-    response="The first superbowl was held on Jan 15, 1967",
-    retrieved_contexts=[
-        "The First AFL–NFL World Championship Game was an American football game played on January 15, 1967, at the Los Angeles Memorial Coliseum in Los Angeles."
-    ],
-)
-scorer = Faithfulness(llm=evaluator_llm)
-await scorer.single_turn_ascore(sample)
-
-
 import asyncio
 import logging
 import os
-import traceback
 
 import numpy as np
 import pandas as pd
 from clearml import Dataset, Task, TaskTypes
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+from ragas import Experiment, experiment
+from ragas.backends import InMemoryBackend
+from ragas.dataset import Dataset as RDataset
+from ragas.llms.base import InstructorBaseRagasLLM, llm_factory
+from ragas.metrics.collections import AnswerAccuracy
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
-from src.evaluators.schemas import EvalIn, EvalOut
-from src.evaluators.similarity.config import AppSettings
 from src.utils.base import (
-    calculate_similarity,
     configure_logging,
     create_openai_client,
 )
@@ -34,15 +22,61 @@ from src.utils.report import log_bin_report
 from src.utils.startup import init_config
 from src.utils.visual import plot_pr_binary, plot_roc_auc_binary, plot_true_lie_distrib
 
+from .config import AppSettings
+
 logger = logging.getLogger(__name__)
+
+
+# Define experiment result structure
+class ExperimentResult(BaseModel):
+    id: int
+    ok: bool = Field(description="Успешно ли посчитана метрика для строки")
+    answer_accuracy: float | None = Field(
+        default=None,
+        description="0..1 при успехе; None при ошибке",
+    )
+    error: str | None = Field(
+        default=None, description="Текст исключения, если ok=False"
+    )
+    label: int
+
+
+# Create experiment function
+@experiment(ExperimentResult)
+async def run_evaluation(row, *, llm: InstructorBaseRagasLLM, sem: asyncio.Semaphore):
+    answer_accuracy = AnswerAccuracy(llm=llm)
+
+    async with sem:
+        try:
+            accuracy = await answer_accuracy.ascore(
+                user_input=row.user_input,
+                response=row.response,
+                reference=row.reference,
+            )
+            return ExperimentResult(
+                id=int(row.id),
+                ok=True,
+                answer_accuracy=float(accuracy.value),
+                error=None,
+                label=int(row.label),
+            )
+        except Exception as exc:  # noqa: BLE001 — намеренно широкий перехват для статистики
+            logger.exception("AnswerAccuracy failed for row")
+            return ExperimentResult(
+                id=int(row.id),
+                ok=False,
+                answer_accuracy=None,
+                error=f"{type(exc).__name__}: {exc}",
+                label=int(row.label),
+            )
 
 
 async def main():
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
-        task_name="RAGAS evaluation",
+        task_name="RAGAS evaluation AnswerAccuracy",
         task_type=TaskTypes.testing,
-        tags=["eval", "RAGAS"],
+        tags=["eval", "RAGAS", "AnswerAccuracy"],
         reuse_last_task_id=False,
     )
     c_task.set_comment("Мета оценка метрики семантического сходства")
@@ -51,8 +85,15 @@ async def main():
     random_state = np.random.RandomState(seed=config.seed)
     configure_logging(config.logging_conf_file)
 
-    client = create_openai_client(config=config.embed)
-    semaphore = asyncio.Semaphore(config.embed.async_cals)
+    client: AsyncOpenAI = create_openai_client(config=config.llm)
+    r_client = llm_factory(
+        model=config.llm.model,
+        provider="openai",
+        client=client,
+        extra_body=config.llm.extra_body,
+        **config.llm.params_extra,
+    )
+    sem = asyncio.Semaphore(config.llm.async_cals)
 
     # получаем датасет
     dataset = Dataset.get(
@@ -69,15 +110,28 @@ async def main():
     logger.info(f"QA readed from {qa_set_file} shape: {qa_dataset.shape}")
     if config.count > 0:
         qa_dataset = qa_dataset.sample(n=config.count, random_state=random_state)
+    eval_df = qa_dataset.rename(
+        columns={"question": "user_input", "answer": "response"}
+    )
+    qa_eval_dataset = RDataset.from_pandas(
+        eval_df,
+        "MuSeRC_QA_eval",
+        InMemoryBackend(),
+    )
+    exp: Experiment = await run_evaluation(qa_eval_dataset, llm=r_client, sem=sem)
+    qa_result = exp.to_pandas()
 
-    results: list[EvalOut] = []
-    counter = 0
+    bad_result = qa_result[~qa_result["ok"]]
+    if not bad_result.empty:
+        logger.warning(f"Count records with fail: {bad_result.shape[0]}")
+        bad_result.to_csv("./bad.csv")
 
-    qa_result = pd.DataFrame.from_records(data=results, index="eval_id")
     logger_c = c_task.get_logger()
+    qa_result = qa_result[qa_result["ok"]]
+    logger_c.report_single_value("ok_rows", qa_result.shape[0])
 
     y_true = qa_result["label"].values
-    y_score = qa_result["eval_score"].values
+    y_score = qa_result["answer_accuracy"].values
 
     if not isinstance(y_true, np.ndarray):
         raise
@@ -195,6 +249,7 @@ async def main():
         y_score=y_score,
         eval_ids=qa_result.index.values,
         target_names=["Истина", "Ложь"],
+        show_hist=True,
     )
     logger_c.report_plotly(
         title="SS Report",
