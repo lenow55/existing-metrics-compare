@@ -10,6 +10,17 @@
       "env": {
         "CLEARML_CONFIG_FILE": "./megallm.conf"
       }
+    },
+    {
+      "name": "aa-ragas",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.evaluators.ragas.main",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": false,
+      "env": {
+        "CLEARML_CONFIG_FILE": "./megallm.conf"
+      }
     }
   ]
 }

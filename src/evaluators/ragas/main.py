@@ -49,25 +49,25 @@ async def run_evaluation(row, *, llm: InstructorBaseRagasLLM, sem: asyncio.Semap
     async with sem:
         try:
             accuracy = await answer_accuracy.ascore(
-                user_input=row.user_input,
-                response=row.response,
-                reference=row.reference,
+                user_input=row["user_input"],
+                response=row["response"],
+                reference=row["reference"],
             )
             return ExperimentResult(
-                id=int(row.id),
+                id=int(row["id"]),
                 ok=True,
                 answer_accuracy=float(accuracy.value),
                 error=None,
-                label=int(row.label),
+                label=int(row["label"]),
             )
         except Exception as exc:  # noqa: BLE001 — намеренно широкий перехват для статистики
             logger.exception("AnswerAccuracy failed for row")
             return ExperimentResult(
-                id=int(row.id),
+                id=int(row["id"]),
                 ok=False,
                 answer_accuracy=None,
                 error=f"{type(exc).__name__}: {exc}",
-                label=int(row.label),
+                label=int(row["label"]),
             )
 
 
@@ -114,17 +114,24 @@ async def main():
         columns={"question": "user_input", "answer": "response"}
     )
     qa_eval_dataset = RDataset.from_pandas(
-        eval_df,
+        eval_df.reset_index(drop=False),
         "MuSeRC_QA_eval",
         InMemoryBackend(),
     )
-    exp: Experiment = await run_evaluation(qa_eval_dataset, llm=r_client, sem=sem)
+    exp: Experiment = await run_evaluation.arun(
+        dataset=qa_eval_dataset,
+        name="muse_answer_accuracy",
+        llm=r_client,
+        sem=sem,
+    )
     qa_result = exp.to_pandas()
 
     bad_result = qa_result[~qa_result["ok"]]
     if not bad_result.empty:
         logger.warning(f"Count records with fail: {bad_result.shape[0]}")
         bad_result.to_csv("./bad.csv")
+    else:
+        logger.info("Metrics computed success")
 
     logger_c = c_task.get_logger()
     qa_result = qa_result[qa_result["ok"]]
