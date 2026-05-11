@@ -257,6 +257,7 @@ async def main():
         eval_ids=qa_result.index.values,
         target_names=["Истина", "Ложь"],
         show_hist=True,
+        bin_size=0.2,
     )
     logger_c.report_plotly(
         title="SS Report",

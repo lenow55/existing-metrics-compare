@@ -103,6 +103,7 @@ def plot_true_lie_distrib(
     eval_ids: npt.NDArray[np.str_],
     target_names: list[str],
     show_hist: bool = False,
+    bin_size: float = 0.01,
 ):
     true_idx = np.flatnonzero(y_true)
     bad_idx = np.argwhere(y_true == 0).flatten()
@@ -111,7 +112,7 @@ def plot_true_lie_distrib(
         target_names,
         curve_type="kde",
         # curve_type="normal",  # override default 'kde'
-        bin_size=0.01,
+        bin_size=bin_size,
         rug_text=[eval_ids[true_idx], eval_ids[bad_idx]],
         show_hist=show_hist,
     )
