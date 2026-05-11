@@ -1,0 +1,15 @@
+{
+  "configurations": [
+    {
+      "name": "ss-compute",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.evaluators.similarity.main",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": false,
+      "env": {
+        "CLEARML_CONFIG_FILE": "./megallm.conf"
+      }
+    }
+  ]
+}
