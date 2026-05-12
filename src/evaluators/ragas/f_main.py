@@ -70,7 +70,7 @@ async def run_evaluation(
                 label=int(row["label"]),
             )
         except Exception as exc:  # noqa: BLE001 — намеренно широкий перехват для статистики
-            logger.exception("AnswerAccuracy failed for row")
+            logger.exception("Faithfulness failed for row")
             return ExperimentResult(
                 id=int(row["id"]),
                 ok=False,
@@ -137,12 +137,13 @@ async def main():
     )
     exp: Experiment = await run_evaluation.arun(
         dataset=qa_eval_dataset,
-        name="muse_answer_accuracy",
+        name="muse_faithulness",
         llm=r_client,
         sem=sem,
         passages=passages,
     )
     qa_result = exp.to_pandas()
+    c_task.register_artifact(name="evaluation_result", artifact=qa_result)
 
     bad_result = qa_result[~qa_result["ok"]]
     if not bad_result.empty:
@@ -156,7 +157,7 @@ async def main():
     logger_c.report_single_value("ok_rows", qa_result.shape[0])
 
     y_true = qa_result["label"].values
-    y_score = qa_result["answer_accuracy"].values
+    y_score = qa_result["faithfulness"].values
 
     if not isinstance(y_true, np.ndarray):
         raise

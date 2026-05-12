@@ -127,6 +127,7 @@ async def main():
         sem=sem,
     )
     qa_result = exp.to_pandas()
+    c_task.register_artifact(name="evaluation_result", artifact=qa_result)
 
     bad_result = qa_result[~qa_result["ok"]]
     if not bad_result.empty:
