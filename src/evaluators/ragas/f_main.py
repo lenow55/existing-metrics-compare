@@ -57,10 +57,11 @@ async def run_evaluation(
 
     async with sem:
         try:
+            passage = passages[str(int(row["passage_id"]))]
             faithfulness = await faithfulness_s.ascore(
                 user_input=row["user_input"],
                 response=row["response"],
-                retrieved_contexts=[str(int(row["passage_id"]))],
+                retrieved_contexts=[passage],
             )
             return ExperimentResult(
                 id=int(row["id"]),
@@ -279,7 +280,7 @@ async def main():
         eval_ids=qa_result.index.values,
         target_names=["Истина", "Ложь"],
         show_hist=True,
-        bin_size=0.2,
+        bin_size=0.1,
     )
     logger_c.report_plotly(
         title="Faithfulness Report",
