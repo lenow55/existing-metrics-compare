@@ -144,6 +144,7 @@ async def main():
     )
     qa_result = exp.to_pandas()
     c_task.register_artifact(name="evaluation_result", artifact=qa_result)
+    _ = c_task.flush(wait_for_uploads=True)
 
     bad_result = qa_result[~qa_result["ok"]]
     if not bad_result.empty:
@@ -154,6 +155,8 @@ async def main():
 
     logger_c = c_task.get_logger()
     qa_result = qa_result[qa_result["ok"]]
+    # INFO: Проверим на nan
+    qa_result = qa_result[qa_result["faithfulness"].notna()]
     logger_c.report_single_value("ok_rows", qa_result.shape[0])
 
     y_true = qa_result["label"].values
