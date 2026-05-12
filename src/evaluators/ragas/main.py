@@ -26,6 +26,8 @@ from .config import AppSettings
 
 logger = logging.getLogger(__name__)
 
+os.environ["RAGAS_DO_NOT_TRACK"] = "true"
+
 
 # Define experiment result structure
 class ExperimentResult(BaseModel):
