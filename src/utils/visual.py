@@ -26,7 +26,7 @@ def plot_pr_binary(
         go.Scatter(
             x=recall,
             y=precision,
-            name=f"{class_name} (AP={ap:.3f})",
+            name=f"{class_name}",
             mode="lines",
             line=dict(color="navy", width=3),
         )
@@ -63,7 +63,7 @@ def plot_roc_auc_binary(
         go.Scatter(
             x=fpr,
             y=tpr,
-            name=f"{class_name} (AUC={roc_auc:.3f})",
+            name=f"{class_name}",
             mode="lines",
             line=dict(color="deeppink", width=3),
         )
