@@ -33,6 +33,10 @@ name = "pytorch_cpu"
 url = "https://download.pytorch.org/whl/cpu"
 priority = "explicit"
 
+[[tool.poetry.source]]
+name = "pytorch_cu132"
+url = "https://download.pytorch.org/whl/cu132"
+priority = "explicit"
 
 [tool.poetry.dependencies]
-torch = { source = "pytorch_cpu" }
+torch = { source = "pytorch_cu132" }
