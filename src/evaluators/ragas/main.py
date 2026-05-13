@@ -12,15 +12,13 @@ from ragas.backends import InMemoryBackend
 from ragas.dataset import Dataset as RDataset
 from ragas.llms.base import InstructorBaseRagasLLM, llm_factory
 from ragas.metrics.collections import AnswerAccuracy
-from sklearn.metrics import classification_report, confusion_matrix, roc_curve
 
 from src.utils.base import (
     configure_logging,
     create_openai_client,
 )
-from src.utils.report import classifier_report_plan, log_bin_report
+from src.utils.report import classifier_report_plan
 from src.utils.startup import init_config
-from src.utils.visual import plot_pr_binary, plot_roc_auc_binary, plot_true_lie_distrib
 
 from .config import AppSettings
 
