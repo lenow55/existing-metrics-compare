@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, NotRequired, TypedDict
 
 from pydantic import Field
 from pydantic_settings import (
@@ -9,9 +9,17 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
-from src.config import ChatLLMConfig
+from src.config import LLMConfig, LLMParams
 
 FILE_ROOT = Path(__file__).resolve().parent
+
+
+class RagasParams(LLMParams):
+    max_retries: NotRequired[int]
+
+
+class ChatLLMConfig(LLMConfig):
+    params_extra: RagasParams = RagasParams()
 
 
 class AppSettings(BaseSettings):
