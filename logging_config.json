@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "formatters": {
+    "default": {
+      "format": "%(asctime)s ==%(levelname)s== %(name)s:%(funcName)s:%(lineno)d ==--== %(message)s"
+    }
+  },
+  "handlers": {
+    "default": {
+      "class": "logging.StreamHandler",
+      "formatter": "default",
+      "level": "DEBUG",
+      "stream": "ext://sys.stderr"
+    }
+  },
+  "loggers": {
+    "__main__": {
+      "level": "INFO",
+      "handlers": ["default"]
+    },
+    "src": {
+      "level": "INFO",
+      "handlers": ["default"]
+    },
+    "research": {
+      "level": "DEBUG",
+      "handlers": ["default"]
+    }
+  }
+}
