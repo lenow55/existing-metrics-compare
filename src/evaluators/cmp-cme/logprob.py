@@ -156,7 +156,11 @@ async def main():
         c_task.close()
         exit(1)
 
-    out_folder = store_parquet(results=results)
+    out_folder, df = store_parquet(results=results)
+
+    logger_c = c_task.get_logger()
+    df_ok = df[df["ok"]]
+    logger_c.report_single_value("ok_rows", df_ok.shape[0])
 
     new_dataset = Dataset.create(
         dataset_name="MuSeRC_QA_logprobs",

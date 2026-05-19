@@ -12,7 +12,7 @@ from src.schemas import TA_logprob_list
 from .schemas import ExperimentResult
 
 
-def store_parquet(results: list[ExperimentResult]) -> str:
+def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
     rows: list[dict[str, Any]] = []
     for r in results:
         d = asdict(r)
@@ -57,4 +57,4 @@ def store_parquet(results: list[ExperimentResult]) -> str:
         use_dictionary=True,
     )
 
-    return temp_dir
+    return temp_dir, df
