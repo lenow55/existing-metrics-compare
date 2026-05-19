@@ -16,12 +16,11 @@ from src.utils.base import (
     configure_logging,
     create_openai_client,
 )
-from src.utils.report import classifier_report_plan
 from src.utils.startup import init_config
 
 from .config import AppSettings
-from .schemas import ExperimentResult
 from .save import store_parquet
+from .schemas import ExperimentResult
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +35,14 @@ async def logprob_generation(
 ):
     async with semaphore:
         try:
+            query = (
+                "question: "
+                + eval["question"]
+                + "\ncontext: "
+                + passages[eval["passage_id"]]
+            )
             _, logprobs = await calculate_prompt_logprobs(
-                query="", client=client, config=config
+                query=query, client=client, config=config
             )
             return ExperimentResult(
                 eval_id=eval["eval_id"],
