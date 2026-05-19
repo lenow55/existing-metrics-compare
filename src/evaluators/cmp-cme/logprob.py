@@ -40,6 +40,7 @@ async def logprob_generation(
                 + eval["question"]
                 + "\ncontext: "
                 + passages[eval["passage_id"]]
+                + eval["answer"]
             )
             _, logprobs = await calculate_prompt_logprobs(
                 query=query, client=client, config=config
