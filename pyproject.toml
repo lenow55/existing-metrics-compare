@@ -13,7 +13,6 @@ dependencies = [
   "clearml (>=2.1.6,<3.0.0)",
   "plotly (>=6.7.0,<7.0.0)",
   "nbformat (>=5.10.4,<6.0.0)",
-  "torch (>=2.10.0,<3.0.0)",
   "pandas-stubs (>=3.0.0.260204,<4.0.0.0)",
   "scikit-learn (>=1.8.0,<2.0.0)",
   "scikit-learn-stubs (>=0.0.3,<0.0.4)",
@@ -39,5 +38,5 @@ name = "pytorch_cu132"
 url = "https://download.pytorch.org/whl/cu132"
 priority = "explicit"
 
-[tool.poetry.dependencies]
-torch = { source = "pytorch_cu132" }
+[tool.poetry.group.torch.dependencies]
+torch = { source = "pytorch_cu132", version = "^2.10.0" }
