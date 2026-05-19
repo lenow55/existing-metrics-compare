@@ -5,3 +5,4 @@ data/
 iframe_figures
 megallm.conf
 /poetry.toml
+config*.json
