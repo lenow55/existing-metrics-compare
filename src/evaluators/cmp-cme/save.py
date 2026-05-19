@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import asdict
 from tempfile import mkdtemp
@@ -10,6 +11,8 @@ import pyarrow.parquet as pq
 from src.schemas import TA_logprob_list
 
 from .schemas import ExperimentResult
+
+logger = logging.getLogger(__name__)
 
 
 def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
@@ -41,7 +44,9 @@ def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
 
     table = pa.Table.from_pandas(df, schema=schema, preserve_index=False)
 
-    table = pa.Table.from_pandas(df, schema=schema, preserve_index=False)
+    # Размер датасета в памяти до экспорта в parquet
+    size_mb = table.nbytes / (1024 * 1024)
+    logger.info("Размер датасета до экспорта в parquet: %.2f MB", size_mb)
 
     # Создаем уникальную временную директорию
     temp_dir = mkdtemp(suffix="_logprobs")
