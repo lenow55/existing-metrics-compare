@@ -3,11 +3,14 @@ import json
 import logging
 import os
 import traceback
+from typing import cast
 
 import numpy as np
 import pandas as pd
 from clearml import Dataset, Task, TaskTypes
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
+from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
 
 from src.config import ChatLLMConfig
 from src.evaluators.schemas import EvalIn
@@ -32,18 +35,36 @@ async def logprob_generation(
     semaphore: asyncio.Semaphore,
     config: ChatLLMConfig,
     passages: dict[str, str],
+    tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast,
 ):
+    messages_prefix: list[dict[str, str]] = [
+        {
+            "role": "user",
+            "content": f"context: {passages[eval['passage_id']]}\nquestion: {eval['question']}",
+        }
+    ]
+    prefix_text = tokenizer.apply_chat_template(
+        messages_prefix,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+    if not isinstance(prefix_text, str):
+        raise TypeError(
+            f"Expected str from apply_chat_template, got {type(prefix_text).__name__}"
+        )
+
+    # Кодируем получившуюся строку для получения количества токенов
+    prefix_tokens = tokenizer.encode(prefix_text)
+    prefix_length = len(prefix_tokens)
+
+    messages: list[ChatCompletionMessageParam] = [
+        cast(ChatCompletionMessageParam, cast(object, i)) for i in messages_prefix
+    ]
+    messages.append({"role": "assistant", "content": eval["answer"]})
     async with semaphore:
         try:
-            query = (
-                "question: "
-                + eval["question"]
-                + "\ncontext: "
-                + passages[eval["passage_id"]]
-                + eval["answer"]
-            )
             _, logprobs = await calculate_prompt_logprobs(
-                query=query, client=client, config=config
+                messages=messages, client=client, config=config
             )
             return ExperimentResult(
                 eval_id=eval["eval_id"],
@@ -51,6 +72,7 @@ async def logprob_generation(
                 passage_id=eval["passage_id"],
                 question=eval["question"],
                 prompt_logprob=logprobs,
+                prefix_length=prefix_length,
                 label=eval["label"],
                 ok=True,
             )
@@ -63,6 +85,7 @@ async def logprob_generation(
                 question=eval["question"],
                 label=eval["label"],
                 prompt_logprob=[],
+                prefix_length=prefix_length,
                 ok=False,
                 error=f"{type(exc).__name__}: {exc}",
             )
@@ -108,6 +131,10 @@ async def main():
         qa_dataset = qa_dataset.sample(n=config.count, random_state=random_state)
         logger.info(f"QA truncated from {qa_set_file} shape: {qa_dataset.shape}")
 
+    tokenizer: PreTrainedTokenizer | PreTrainedTokenizerFast = (
+        AutoTokenizer.from_pretrained(config.llm.model)
+    )
+
     tasks: list[asyncio.Task[ExperimentResult]] = []
     for idx, row in qa_dataset.iterrows():
         if not isinstance(idx, int):
@@ -127,6 +154,7 @@ async def main():
                     semaphore=sem,
                     config=config.llm,
                     passages=passages,
+                    tokenizer=tokenizer,
                 )
             )
         )

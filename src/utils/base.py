@@ -3,6 +3,7 @@ import logging
 from asyncio import Semaphore
 from logging import config as log_config_m
 
+from openai.types.chat import ChatCompletionMessageParam
 import torch
 from httpx import AsyncClient, Timeout
 from openai import AsyncOpenAI
@@ -74,7 +75,7 @@ def create_openai_client(config: LLMConfig) -> AsyncOpenAI:
 
 
 async def calculate_prompt_logprobs(
-    query: str,
+    messages: list[ChatCompletionMessageParam],
     client: AsyncOpenAI,
     config: ChatLLMConfig,
 ) -> tuple[str, list[None | dict[str, PromptLogprob]]]:
@@ -107,7 +108,7 @@ async def calculate_prompt_logprobs(
 
     response = await client.chat.completions.create(
         model=config.model,
-        messages=[{"role": "user", "content": query}],
+        messages=messages,
         logprobs=True,
         top_logprobs=config.count_logprobs,  # Берем топ-k вариантов для расчета неопределенности
         extra_body=extra_body,

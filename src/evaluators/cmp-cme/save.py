@@ -33,6 +33,7 @@ def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
             ("question", pa.string()),
             ("answer", pa.string()),
             ("prompt_logprob", pa.large_string()),  # JSON
+            ("prefix_length", pa.int32()),
             ("ok", pa.bool_()),
             ("error", pa.string()),
         ]
