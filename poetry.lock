@@ -3144,6 +3144,24 @@ files = [
 numpy = ">=1.23.5"
 
 [[package]]
+name = "parquet"
+version = "1.3.1"
+description = "Python support for Parquet file format"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "parquet-1.3.1-py3-none-any.whl", hash = "sha256:a492a08643b51af8b4c2a25d97e1667170a483fc68ca408979b080ae9d771f51"},
+    {file = "parquet-1.3.1.tar.gz", hash = "sha256:fb1c90768c1b9159d4d6a9b3112ea8107b0b46d7491c5ac452ba7350f333bf0a"},
+]
+
+[package.dependencies]
+thriftpy2 = "*"
+
+[package.extras]
+snappy = ["python-snappy"]
+
+[[package]]
 name = "parso"
 version = "0.8.7"
 description = "A Python Parser"
@@ -3334,6 +3352,18 @@ dev-core = ["pytest", "requests", "ruff (==0.11.12)"]
 dev-optional = ["anywidget", "build", "colorcet", "fiona (<=1.9.6) ; python_version <= \"3.8\"", "geopandas", "inflect", "jupyterlab", "kaleido (>=1.1.0)", "numpy (>=1.22)", "orjson", "pandas", "pdfrw", "pillow", "plotly-geo", "polars[timezone]", "pyarrow", "pyshp", "pytest", "pytz", "requests", "ruff (==0.11.12)", "scikit-image", "scipy", "shapely", "statsmodels", "vaex ; python_version <= \"3.9\"", "xarray"]
 express = ["numpy (>=1.22)"]
 kaleido = ["kaleido (>=1.1.0)"]
+
+[[package]]
+name = "ply"
+version = "3.11"
+description = "Python Lex & Yacc"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"},
+    {file = "ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3"},
+]
 
 [[package]]
 name = "prompt-toolkit"
@@ -4893,6 +4923,90 @@ files = [
 ]
 
 [[package]]
+name = "thriftpy2"
+version = "0.6.0"
+description = "Pure python implementation of Apache Thrift."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "thriftpy2-0.6.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:265588b8cdb3fe1097db43bf35fb208edc69d9350a2bec3a737d6357d0a5650d"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ad18b3082a56119e0fb19ad4d47556ee24ce076466fff42b0d0a75a20d69a2e0"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:64860404663009a41a529f1f13c012e1ccf4a814b123581729f98c2b103ef362"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:4cdcd8ae0b1017c5d7cac3595f1ac43ab9c0471cf700156d62d246248c734a35"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:1245c36b82f34aa26f049e6529f40ad34d9be8d12bd0131559847c8476b98ce0"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-win32.whl", hash = "sha256:ac3f7143da2d1f6087128d47d348ba0d92fe7f59ff476919f8d0f78fa5720f7b"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-win_amd64.whl", hash = "sha256:b57f367d7b0e1bc9e5c9b0ff34febdb3fe440f1fe8d75903ae71301bc06072c0"},
+    {file = "thriftpy2-0.6.0-cp310-cp310-win_arm64.whl", hash = "sha256:3359a7c4eb4c281bf54bd760dcc03c43299f0d529dd2a5018be2f1fbebf0cbbd"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:0a0249bf9004d241cf6fd1ed1879209ab7641f7e09456323a839afb6c9213b58"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7afbd9bbe89866dbd9221f4c7e7321f4d0519772245d1b216b5ff1d50b8c0af7"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4b8714e6eb37d973bdd231a46ce1c639417fe8035d4d3224f832e4a6afd05d5f"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:210345281d41b3a76d263b555d3e3cc482103738441bdb92a73033a4e9a042e1"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:b23462a349d4e7c6c77e8f6e735fb24dccdde14dd445c5eca76a9aaca7111f08"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-win32.whl", hash = "sha256:852e538b4866ed776126349161d9fdc37387b1e15ab46805f98dcdee25fee4b5"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-win_amd64.whl", hash = "sha256:bdf77ba7a8987a239eb57cf840d62669741f8b92b61a617e63898caed31da898"},
+    {file = "thriftpy2-0.6.0-cp311-cp311-win_arm64.whl", hash = "sha256:386d8c4a5677fd94fd16c1af2adf39f59698af1e4ef0c3c026083f278540e352"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:44365bb5098d0a91c44382e7df0ad44d5b9a588d29d9071aca4a2867f704aaf1"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7068cae451be320c41b1442d5e2ec06dae050f1d3883918096f9cc3fcc791e89"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2ae866adf9b112c7ab30c1a90d878a5d6f2d40244fbc46ec8477425d802f4ac5"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:b361152c24fd5c791220de9966b00696578c9884a2bb67e4759d4dfe05fd7049"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:e6c4fb1e7f51f8858f348ed9c31bb408b61274942d18b549ec163bb480c987a0"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-win32.whl", hash = "sha256:a07d4c466ad1b8c146dd7b893d2c2e735c3e530abfcef0c741a464001e828155"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-win_amd64.whl", hash = "sha256:690d53df7b154d817d5b1dc5d24ba95045b670862005b8321f307f011a0738b2"},
+    {file = "thriftpy2-0.6.0-cp312-cp312-win_arm64.whl", hash = "sha256:cafa1d43bcc69129a4855fd3973ab7983bb2274c407e5ff572af5dc196e00313"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:98128abaa1bac8c4f60d08af641b981ba56486269532c03e99a1d48c9d6f9aa9"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0aa86f5d83a49567fa6ac81c7f78ffe8e5cf68b57cf3f7f7c55dc1486f5e9bbb"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:16eecfd34bd541b75172ba0d69ea90b874611a7361d18906fb6d95955089cc30"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:c37f5dbfe95579549485c33167854784358f559feda703ccc058719ca0efd8aa"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:2bf891c2d441b1edddfc62f16ab3031ac7506cba5b77680654179dbe93d8b7ec"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-win32.whl", hash = "sha256:5ad583efb91402c0aada9cb4df0b6255607ceb83048dd2f629c09858594977ff"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-win_amd64.whl", hash = "sha256:bf96b64400da2f411b43c4c81c2e20b09e3300d86766a52f42393696c8962f11"},
+    {file = "thriftpy2-0.6.0-cp313-cp313-win_arm64.whl", hash = "sha256:b8dc65d2e7951b7e81c17b92857db7c19d6b3dd442d2d8600b5bd5040aa43ce6"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:851981ded8bb42da66213cf95d1dd5eaf06c5d6b3a95725a18eddd58ec992b6b"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8eb0566b4501c27ea51f2e593531122703946969564fe526a5ff1b18be0ad49a"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:375cca06f36f54339838c7f8251b64a777d5ff1277f8b91999487fad1a8e2d73"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:6dbea13f82de14b3db06cbc66e2060af4bf1070442398ddf42fa71ab188db627"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:c41312c6edad5e875613719236f1ca6bba9310df40b1adc9308248e1bdb7a1ea"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-win32.whl", hash = "sha256:a7c4aba79ef5fa41017d814016037f5ba29ecae889cea3d37108a4677ecb3aac"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-win_amd64.whl", hash = "sha256:cb98556e919be3e6ba9bca629dbddccfaa33b95a0fe7503052849b124e4f88cd"},
+    {file = "thriftpy2-0.6.0-cp313-cp313t-win_arm64.whl", hash = "sha256:182f54a7248c8ecf1320cf26d1fc9115765df6b1f2589c1d2d0df7049a5b27d4"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:443e502b428d325c57aec0947991857e8dc0589d0464181f35bd48f870cd5d18"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:033021acfc347f3e51cf107b189a5efafcd1e974a8217a4d066d93719b2bf353"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0345c8ba40f7b98c24c1ecabfc04ff512ed930ab86ff277572bd279b69a0a252"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:28fd55960a6d42207060536109928a4615fbbd6874c0ddd8a705b47075f1d2d0"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:cd2e2c4dcc30c373e317d39b044afa6d9a090bec11d186f25841f70bc520bbb5"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-win32.whl", hash = "sha256:f837ab85ae93b118766b8b28a1cec47a1daddee303e1f986a595c56379062a5c"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-win_amd64.whl", hash = "sha256:b51b5259dc344482ab21b768dfc7f54d51d9133665e72890831725068f69f24a"},
+    {file = "thriftpy2-0.6.0-cp314-cp314-win_arm64.whl", hash = "sha256:eccab0281667caab0c055882b3bbb8e346bb0181e55f37477e3e5e3f5b7a96dd"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:0c2f823bb691dd71c9c81170026dc52ace5b750881799960ea9f992919eb9731"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:bc320e960347e5f9d27e8b4a9fc7044b2b26bfe4522bb4957e741fc1d1ebd2f0"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6f78d1ceac9545b87857c0e9b4e28a42fb98f8c6991d6b0e4099a012c35d2e73"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:f59f74c3779aa47223ba0a9e23ef10d2af5a873ed3624c78303f62a679d1b63e"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:4550cbb6629c9f6186ab22cb497f262408e1a90ae10b8653599f2717f518f0df"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-win32.whl", hash = "sha256:8b19d19661fc9a71f19b7c432c413ab65025e5dd11fbd192bd9169afb13b9ce0"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-win_amd64.whl", hash = "sha256:aa57de5929ada67d2f753442ce04dcc35561899558a1566f39f6e0c893cbc54b"},
+    {file = "thriftpy2-0.6.0-cp314-cp314t-win_arm64.whl", hash = "sha256:2c88b0d356ea18ce026a52aa7c2110693db77fd52d5ac7553616635a7f165bbd"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f6b86112cca7bd04151ce248d781763ea5f74cc18d148476c6d16cee32db81ac"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:98a7911f5ca3d6f809377fa8eaad8295687a106dd7bdd15624b267270d0da2ab"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:151d299e8e3694a6cc0f2f2cda01d5744080742649de958c5cdcbebb4306205f"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:29ff125e40c8016b4d3bf48e6d727bd93d2892451b47bfe57ba896944ecbdb0c"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:8f393607d54091e8976e297f8fd7399606d12cd8c2b8852353f07ad5ddac4224"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-win32.whl", hash = "sha256:3090d9cabc2c31c92ae943f36d539a20adfd82697f50e996ce94f0b279e9e1e4"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-win_amd64.whl", hash = "sha256:91df1fa70a99ac08dc449d6fda24a14992a1836d571928f217c40c66fd63fcc8"},
+    {file = "thriftpy2-0.6.0-cp39-cp39-win_arm64.whl", hash = "sha256:8e62d9c36bcfe6b85bec7b754accb97e2fa7b6a7c9a0c37f824d85eba699e7b8"},
+    {file = "thriftpy2-0.6.0.tar.gz", hash = "sha256:621c263f99274d51a9a1deecf301845f1408d497bdafed682db6155132a99cf4"},
+]
+
+[package.dependencies]
+ply = ">=3.4,<4.0"
+six = ">=1.15,<2.0"
+
+[package.extras]
+aiohttp = ["aiohttp (>=3.8.0,<4.0.0)"]
+dev = ["aiohttp (>=3.8.0,<4.0.0)", "flake8 (>=4.0)", "pytest (>=6.1.1,<8.2.0)", "pytest-asyncio", "pytest-reraise", "sphinx (>=1.3)", "sphinx-rtd-theme (>=0.1.9)", "tornado (>=4.0,<6.0) ; python_version < \"3.12\"", "tornado (>=4.0,<7.0) ; python_version >= \"3.12\""]
+tornado = ["tornado (>=4.0,<6.0) ; python_version < \"3.12\"", "tornado (>=4.0,<7.0) ; python_version >= \"3.12\""]
+
+[[package]]
 name = "tiktoken"
 version = "0.12.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
@@ -5811,4 +5925,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "c27be588d44dc8b98bf13e56d9a762eabe8cc5bd2204baab659c38ced5a29933"
+content-hash = "622e385eb9d7ff1ce3729fe1f25993422ed518a7829f2ad773947d2664fd7899"

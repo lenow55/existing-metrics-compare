@@ -62,7 +62,7 @@ class PtbScenarioRes(PtbScenario):
 # INFO: Контейнеры для валидации вывода VLLM
 
 
-class PromptLogprob(BaseModel):
+class PromptLogprob(TypedDict):
     decoded_token: str
     """The token."""
 
