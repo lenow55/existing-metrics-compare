@@ -1,12 +1,11 @@
 import json
 import logging
-from asyncio import Semaphore
 from logging import config as log_config_m
 
-from openai.types.chat import ChatCompletionMessageParam
 import torch
 from httpx import AsyncClient, Timeout
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
 from pydantic import TypeAdapter
 
 from src.config import ChatLLMConfig, EmbedLLMConfig, LLMConfig
