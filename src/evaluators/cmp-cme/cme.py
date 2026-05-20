@@ -183,7 +183,7 @@ def main():
 
     # INFO: энтропию тоже надо инвертировать,
     # больше энтропия - хуже
-    invert_score = -np.log(y_score)
+    invert_score = 1 - y_score
 
     fig = px.histogram(
         invert_score,
