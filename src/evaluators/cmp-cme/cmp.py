@@ -131,12 +131,17 @@ def main():
     if not isinstance(y_score, np.ndarray):
         raise
 
+    # INFO:
+    # 1. надо оценить распределение PPL
+    # статистические тесты для сравнения
     score = -np.log(y_score)
     print(f"ROC-AUC:  {roc_auc_score(y_true, score):.3f}")
     print(f"PR-AUC:   {average_precision_score(y_true, score):.3f}")
     print(f"Spearman: {spearmanr(y_true, score).correlation:+.3f}")  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-    u, p = mannwhitneyu(y_score[y_true == 1], y_score[y_true == 0], alternative="less")
-    print(f"MWU p-value: {p:.2e}")
+    u_stat, p_value_mw = mannwhitneyu(
+        y_score[y_true == 1], y_score[y_true == 0], alternative="less"
+    )
+    print(f"MWU p-value: {p_value_mw:.2e}")
 
     for lbl in (0, 1):
         s = y_score[y_true == lbl]
