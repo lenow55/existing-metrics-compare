@@ -1,4 +1,5 @@
 import logging
+import plotly.express as px
 import math
 import os
 
@@ -9,8 +10,7 @@ import pyarrow.parquet as pq
 from clearml import Dataset, Task, TaskTypes
 from joblib import Parallel, delayed
 from pyarrow import Table
-from scipy.stats import mannwhitneyu, spearmanr
-from sklearn.metrics import average_precision_score, roc_auc_score
+from scipy.stats import mannwhitneyu
 
 from src.schemas import PromptLogprob, TA_logprob_list
 from src.utils.base import (
@@ -57,9 +57,9 @@ def _score_batch(items: list[tuple[str, int]]) -> list[float]:
 def main():
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
-        task_name="Build logprobs",
+        task_name="CM PPL evaluation",
         task_type=TaskTypes.testing,
-        tags=["build", "Logprobs", "CrossModel"],
+        tags=["eval", "Logprobs", "CrossModel"],
         reuse_last_task_id=False,
     )
     c_task.set_comment("Вычисление PPL на модели CrossModel")
@@ -131,30 +131,50 @@ def main():
     if not isinstance(y_score, np.ndarray):
         raise
 
+    fig = px.histogram(
+        y_score,
+        nbins=50,
+        marginal="box",
+    )
+    logger_c.report_plotly(
+        title="ScoreDist Report",
+        series="PPL",
+        figure=fig,
+    )
     # INFO:
     # 1. надо оценить распределение PPL
     # статистические тесты для сравнения
-    score = -np.log(y_score)
-    print(f"ROC-AUC:  {roc_auc_score(y_true, score):.3f}")
-    print(f"PR-AUC:   {average_precision_score(y_true, score):.3f}")
-    print(f"Spearman: {spearmanr(y_true, score).correlation:+.3f}")  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-    u_stat, p_value_mw = mannwhitneyu(
-        y_score[y_true == 1], y_score[y_true == 0], alternative="less"
+    invert_score = -np.log(y_score)
+
+    fig = px.histogram(
+        invert_score,
+        nbins=50,
+        marginal="box",
     )
-    print(f"MWU p-value: {p_value_mw:.2e}")
+    logger_c.report_plotly(
+        title="ScoreDist Report",
+        series="PPL inverted",
+        figure=fig,
+    )
+    _, p_value_mw = mannwhitneyu(
+        y_score[y_true == 1],
+        y_score[y_true == 0],
+        alternative="less",
+    )
+    logger_c.report_single_value("MWU p-value", float(p_value_mw))
 
     for lbl in (0, 1):
         s = y_score[y_true == lbl]
         print(f"  label={lbl}: n={len(s)}, median PPL={np.median(s):.2f}")
 
-    # classifier_report_plan(
-    #     y_true=y_true,
-    #     y_score=y_score,
-    #     index=qa_result.index.values,
-    #     logger_c=logger_c,
-    #     metric_name="PPL (CMP)",
-    #     show_hist=False,
-    # )
+    classifier_report_plan(
+        y_true=y_true,
+        y_score=invert_score,
+        index=qa_result.index.values,
+        logger_c=logger_c,
+        metric_name="PPL (CMP)",
+        show_hist=False,
+    )
     _ = c_task.flush(wait_for_uploads=True)
     _ = c_task.mark_completed(status_message="completed")
     c_task.close()
