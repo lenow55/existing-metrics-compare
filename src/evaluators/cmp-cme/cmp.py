@@ -1,11 +1,12 @@
 import logging
-import plotly.express as px
 import math
 import os
 
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from clearml import Dataset, Task, TaskTypes
 from joblib import Parallel, delayed
@@ -43,6 +44,8 @@ def compute_ppl(logprobs: list[None | dict[str, PromptLogprob]], prefix_length: 
         lp_values.append(lp["logprob"])
 
     lp_sum: float = math.fsum(lp_values)
+    if len(lp_values) == 0:
+        return float("inf")
     norm = lp_sum / len(lp_values) * -1
     try:
         return math.exp(norm)
@@ -59,7 +62,7 @@ def main():
         project_name="RAG_Metrics",
         task_name="CM PPL evaluation",
         task_type=TaskTypes.testing,
-        tags=["eval", "Logprobs", "CrossModel"],
+        tags=["eval", "PPL", "CrossModel"],
         reuse_last_task_id=False,
     )
     c_task.set_comment("Вычисление PPL на модели CrossModel")
@@ -103,8 +106,10 @@ def main():
             f"Logprobs file truncated from {table.num_rows} to: {sample.num_rows}"
         )
 
-    prompt_logprobs = table.column("prompt_logprob").to_pylist()
-    prefix_lengths = table.column("prefix_length").to_pylist()
+    filtered_table = table.filter(pc.field("ok") == True)
+
+    prompt_logprobs = filtered_table.column("prompt_logprob").to_pylist()
+    prefix_lengths = filtered_table.column("prefix_length").to_pylist()
 
     pairs = list(zip(prompt_logprobs, prefix_lengths))
     chunks = [pairs[i : i + CHUNK] for i in range(0, len(pairs), CHUNK)]
@@ -113,9 +118,9 @@ def main():
     )
     scores = [x for sub in results_nested for x in sub]  # pyright: ignore[reportOptionalIterable]
     score_array = pa.array(scores, type=pa.float64())
-    table = table.append_column("score", score_array)
+    filtered_table = filtered_table.append_column("score", score_array)
 
-    qa_result = table.select(["eval_id", "label", "score"]).to_pandas()
+    qa_result = filtered_table.select(["eval_id", "label", "score"]).to_pandas()
     c_task.register_artifact(name="evaluation_result", artifact=qa_result)
     _ = c_task.flush(wait_for_uploads=True)
 
