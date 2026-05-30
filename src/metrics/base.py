@@ -8,8 +8,10 @@ from src.schemas import MetricOutput, PromptLogprob, TextUnitMetric
 # Первый элемент — фактически выбранный токен.
 LogprobStep = list[PromptLogprob | TopLogprob]
 
-# Редьюсер: по шагу возвращает значение метрики либо None, если шаг нужно пропустить.
-StepValueFn = Callable[[LogprobStep], float | None]
+# Редьюсер: по текущему и предыдущему шагу возвращает значение метрики либо None,
+# если шаг нужно пропустить. Предыдущий шаг = None для первой позиции в logprobs.
+# Предыдущий шаг сквозной по logprobs, в т.ч. на границе префикс→ответ.
+StepValueFn = Callable[[LogprobStep, LogprobStep | None], float | None]
 
 
 @runtime_checkable
@@ -115,7 +117,8 @@ def map_token_metric(
     for idx, (tok, span) in enumerate(zip(token_text, token_spans)):
         if tok is None:
             continue
-        value = value_fn(prefix_steps[idx])
+        prev_step = logprobs[idx - 1] if idx > 0 else None
+        value = value_fn(prefix_steps[idx], prev_step)
         if value is None:
             continue
 
@@ -151,13 +154,15 @@ def map_token_metric(
         tok = _head_token(step)
         if tok is None:
             continue
-        value = value_fn(step)
+        abs_idx = prefix_length + offset
+        prev_step = logprobs[abs_idx - 1] if abs_idx > 0 else None
+        value = value_fn(step, prev_step)
         if value is None:
             continue
         output.answer.append(
             {
                 "value": value,
-                "index": prefix_length + offset,
+                "index": abs_idx,
                 "text_unit": tok,
             }
         )

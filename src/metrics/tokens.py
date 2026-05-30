@@ -12,19 +12,32 @@ def _logprob(item: PromptLogprob | TopLogprob) -> float:
     return float(item.logprob)
 
 
-def step_token_ll(step: LogprobStep) -> float | None:
+def step_token_ll(step: LogprobStep, _prev: LogprobStep | None = None) -> float | None:
     """
     Log Likelihood — logprob фактически выбранного (первого) токена шага.
+    Предыдущий шаг не используется.
     """
     if not step:
         return None
     return _logprob(step[0])
 
 
-def step_token_entropy(step: LogprobStep) -> float | None:
+def step_token_inflection(step: LogprobStep, prev: LogprobStep | None) -> float | None:
+    """
+    Inflection point — разница LL текущего и предыдущего токенов: LL_t - LL_{t-1}.
+    Для самой первой позиции возвращает None (нет предыдущего токена).
+    """
+    if not step or not prev:
+        return None
+    return _logprob(step[0]) - _logprob(prev[0])
+
+
+def step_token_entropy(
+    step: LogprobStep, _prev: LogprobStep | None = None
+) -> float | None:
     """
     Рассчитывает энтропию Шеннона (в битах) на основе Top-K logprobs шага.
-    Формула: H = - sum(p * log2(p)).
+    Формула: H = - sum(p * log2(p)). Предыдущий шаг не используется.
     """
     if not step:
         return None
@@ -77,5 +90,26 @@ def calculate_token_entropy(
     )
 
 
+def calculate_token_inflection(
+    *,
+    logprobs: list[LogprobStep],
+    context: str,
+    question: str,
+    prefix_length: int,
+) -> MetricOutput:
+    """
+    Inflection points: для каждого токена — разница LL с предыдущим.
+    Большие по модулю значения указывают на «перегиб» правдоподобия.
+    """
+    return map_token_metric(
+        logprobs=logprobs,
+        context=context,
+        question=question,
+        prefix_length=prefix_length,
+        value_fn=step_token_inflection,
+    )
+
+
 register(id="token_ll", f_metric=calculate_token_ll)
 register(id="token_entropy", f_metric=calculate_token_entropy)
+register(id="token_inflection", f_metric=calculate_token_inflection)
