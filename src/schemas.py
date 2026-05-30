@@ -1,62 +1,36 @@
+from dataclasses import dataclass
 from typing import NotRequired, TypedDict
 
 from pydantic import BaseModel, Field, TypeAdapter
 
-
-# INFO: Контейнеры для хранения логпробов
-class TokenImportance(TypedDict):
-    token: str
-    importance: float
+# INFO: Контейнеры метрики text unit
 
 
-TA_tokens_list = TypeAdapter(list[TokenImportance])
+class TextUnitMetric(TypedDict):
+    """
+    универсальный контейнер для частички текста,
+    котораям может быть как токеном, так и целым словом
+    """
+
+    value: float
+    """значение метрики"""
+    index: int
+    """индекс на выходе текстовой единицы"""
+    text_unit: str
+    """текстовое представление unicode"""
+    position: NotRequired[tuple[int, int]]
+    """
+    (индекс начального символа в исходном тексте, индекс конечного символа в исходном тексте)
+    для частей промпта
+    """
 
 
-class TokenEntropy(TypedDict):
-    token: str
-    entropy: float
-
-
-class WordInfo(TypedDict):
-    word: str
-    start: int
-    end: int
-
-
-class WordInfoRes(WordInfo):
-    entropy: float
-
-
-class WordImportance(WordInfo):
-    importance: float
-
-
-TA_words_list = TypeAdapter(list[WordImportance])
-
-
-# INFO: Контейнеры для хранения сценариев запросов
-class Scenario(TypedDict):
-    text: str
-    name: str
-    label: NotRequired[int]
-
-
-class ScenarioResult(Scenario):
-    logprobs: list[TokenEntropy]
-
-
-class PtbScenario(TypedDict):
-    context: str
-    name: str
-    question: str
-    reference: str
-    label: NotRequired[int]
-
-
-class PtbScenarioRes(PtbScenario):
-    logprobs: list[TokenEntropy]
-    words: list[WordInfoRes]
-    answer: str
+@dataclass(frozen=True)
+class MetricOutput:
+    instruct: list[TextUnitMetric]
+    context: list[TextUnitMetric]
+    question: list[TextUnitMetric]
+    answer: list[TextUnitMetric]
 
 
 # INFO: Контейнеры для валидации вывода VLLM
@@ -140,43 +114,4 @@ class ReadingComprehensionItem(BaseModel):
     )
 
 
-# INFO: контейнер для подготовленных данных
-class Check(TypedDict):
-    question: str
-    answer: str
-    passage_id: str
-
-
-# INFO: контейнер для запроса в ллм
-class CheckLlmIn(Check):
-    check_id: int
-
-
 TA_logprob_list = TypeAdapter(list[None | dict[str, PromptLogprob]])
-
-
-class CheckStage1Out(CheckLlmIn):
-    gen_answer: str
-    prompt_logprobs: list[None | dict[str, PromptLogprob]]
-    similarity: float
-
-
-class Stage3Out(CheckLlmIn):
-    ptb_words: list[WordImportance]
-    passage: str
-
-
-class Stage3In(CheckLlmIn):
-    passage: str
-    ptb_words: str
-
-
-class Stage4Out(CheckStage1Out):
-    passage: str
-    ptb_words: str
-
-
-class Stage2Out(TypedDict):
-    check_id: int
-    tokens_importances: list[TokenImportance]
-    words_importances: list[WordImportance]
