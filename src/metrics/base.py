@@ -45,14 +45,6 @@ def _head_token(step: LogprobStep | None) -> str | None:
     return str(head.token)
 
 
-def _overlap(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, int] | None:
-    lo = max(a[0], b[0])
-    hi = min(a[1], b[1])
-    if hi <= lo:
-        return None
-    return (lo, hi)
-
-
 def map_token_metric(
     *,
     logprobs: list[LogprobStep],
@@ -68,33 +60,38 @@ def map_token_metric(
         <chat-template prefix> context: {context}\\nquestion: {question} <chat-template suffix>
     После prefix_length идут токены ответа ассистента.
 
-    Функция:
-      1. Реконструирует текст префикса конкатенацией decoded_token фактически
-         выбранных токенов и запоминает символьный интервал каждого токена.
-      2. По маркерам "context: " и "\\nquestion: " находит расположение context
-         и question в реконструированной строке.
-      3. Каждому токену префикса по пересечению символьного интервала ставит
-         в соответствие сегмент: context / question / иначе instruct.
-      4. Все токены после prefix_length уходят в answer.
-      5. Значение метрики на каждом шаге считается переданной value_fn.
-         Если value_fn вернула None — шаг пропускается.
+    Алгоритм:
+      1. Реконструируем текст префикса конкатенацией decoded_token фактически
+         выбранных токенов и параллельно строим массив char_to_token такой,
+         что char_to_token[i] = индекс токена, которому принадлежит символ i.
+         Пример для токенов ["aa", "bbb", "cc"]:
+            reconstructed = "aabbbcc"
+            char_to_token = [0,0,1,1,1,2,2]
+      2. По маркерам "context: " и "\\nquestion: " находим символьные срезы
+         context и question внутри реконструированной строки.
+      3. Срезы char_to_token по этим интервалам → множества индексов токенов
+         для context / question. Всё, что не попало ни туда, ни туда — instruct.
+      4. Дополнительно для каждого токена в контексте/вопросе считаем position
+         как смещения первого и последнего символа токена, попавших в срез,
+         относительно начала сегмента.
+      5. Токены после prefix_length уходят в answer без position.
+      6. Значение метрики на каждом шаге считается через value_fn(step, prev).
     """
     output = MetricOutput(instruct=[], context=[], question=[], answer=[])
 
-    # 1. Префикс: восстановим текст и интервалы токенов.
+    # 1. Реконструкция текста префикса + карта символ→токен.
     prefix_steps = logprobs[:prefix_length]
     token_text: list[str | None] = []
-    token_spans: list[tuple[int, int]] = []
-    cursor = 0
-    for step in prefix_steps:
+    decoded_buf: list[str] = []
+    char_to_token: list[int] = []
+    for idx, step in enumerate(prefix_steps):
         tok = _head_token(step)
         token_text.append(tok)
         if tok is None:
-            token_spans.append((cursor, cursor))
             continue
-        token_spans.append((cursor, cursor + len(tok)))
-        cursor += len(tok)
-    reconstructed = "".join(t for t in token_text if t is not None)
+        decoded_buf.append(tok)
+        char_to_token.extend([idx] * len(tok))
+    reconstructed = "".join(decoded_buf)
 
     # 2. Положения context и question внутри реконструированной строки.
     ctx_marker = "context: "
@@ -113,8 +110,31 @@ def map_token_metric(
     else:
         q_start = q_end = -1
 
-    # 3. Распределяем токены префикса по сегментам.
-    for idx, (tok, span) in enumerate(zip(token_text, token_spans)):
+    # 3. Слайсы карты символ→токен и множества индексов для быстрых проверок.
+    ctx_slice = char_to_token[ctx_start:ctx_end] if ctx_start >= 0 else []
+    q_slice = char_to_token[q_start:q_end] if q_start >= 0 else []
+    ctx_token_ids = set(ctx_slice)
+    q_token_ids = set(q_slice)
+
+    # Для пограничных токенов считаем position как (first_char, last_char + 1)
+    # относительно начала соответствующего сегмента.
+    def _positions_from_slice(
+        char_slice: list[int],
+    ) -> dict[int, tuple[int, int]]:
+        positions: dict[int, tuple[int, int]] = {}
+        for offset, tok_idx in enumerate(char_slice):
+            if tok_idx not in positions:
+                positions[tok_idx] = (offset, offset + 1)
+            else:
+                lo, _ = positions[tok_idx]
+                positions[tok_idx] = (lo, offset + 1)
+        return positions
+
+    ctx_positions = _positions_from_slice(ctx_slice)
+    q_positions = _positions_from_slice(q_slice)
+
+    # 4. Распределяем токены префикса по сегментам.
+    for idx, tok in enumerate(token_text):
         if tok is None:
             continue
         prev_step = logprobs[idx - 1] if idx > 0 else None
@@ -122,23 +142,20 @@ def map_token_metric(
         if value is None:
             continue
 
-        ctx_ov = _overlap(span, (ctx_start, ctx_end)) if ctx_start >= 0 else None
-        q_ov = _overlap(span, (q_start, q_end)) if q_start >= 0 else None
-
-        if ctx_ov is not None:
+        if idx in ctx_token_ids:
             unit: TextUnitMetric = {
                 "value": value,
                 "index": idx,
                 "text_unit": tok,
-                "position": (ctx_ov[0] - ctx_start, ctx_ov[1] - ctx_start),
+                "position": ctx_positions[idx],
             }
             output.context.append(unit)
-        elif q_ov is not None:
+        elif idx in q_token_ids:
             unit = {
                 "value": value,
                 "index": idx,
                 "text_unit": tok,
-                "position": (q_ov[0] - q_start, q_ov[1] - q_start),
+                "position": q_positions[idx],
             }
             output.question.append(unit)
         else:
@@ -149,7 +166,7 @@ def map_token_metric(
             }
             output.instruct.append(unit)
 
-    # 4. Ответ ассистента.
+    # 5. Ответ ассистента.
     for offset, step in enumerate(logprobs[prefix_length:]):
         tok = _head_token(step)
         if tok is None:
