@@ -1,10 +1,8 @@
 import json
 import logging
 import os
-import traceback
 
 import numpy as np
-import pandas as pd
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
@@ -12,15 +10,18 @@ from clearml import Dataset, Task, TaskTypes
 from pyarrow import Table
 
 from src.evaluators.cmp_cme.config import AppSettings
-from src.schemas import TA_logprob_list
+from src.schemas import TA_logprob_list, MetricOutput
 from src.utils.base import (
     configure_logging,
 )
 from src.utils.startup import init_config
+from src.metrics.base import METRICS_HUB, MetricSignature
 
 from .save import store_parquet
 
 logger = logging.getLogger(__name__)
+
+METRIC_NAME = "token_ll"
 
 
 async def main():
@@ -75,6 +76,7 @@ async def main():
     prompt_logprobs = filtered_table.column("prompt_logprob")
     prefix_lengths = filtered_table.column("prefix_length")
 
+    results: list[MetricOutput | None] = []
     for passage_id, question, answer, prompt_logprob, prefix_length in zip(
         passage_ids, questions, answers, prompt_logprobs, prefix_lengths
     ):
@@ -82,9 +84,19 @@ async def main():
         question: str = str(question)
         answer: str = str(answer)
         prefix_length: int = int(prefix_length)
-        TA_logprob_list.validate_json(prompt_logprob)
+        prompt_logprob = TA_logprob_list.validate_json(prompt_logprob)
 
-    results: list[ExperimentResult] = []
+        context: str = passages.get(passage_id, "")
+        metric_func = METRICS_HUB.get(METRIC_NAME)
+        if not isinstance(metric_func, MetricSignature):
+            raise RuntimeError(f"try use not defined metric: {METRIC_NAME}")
+
+        metric_func(
+            logprobs=prompt_logprob,
+            context=context,
+            question=question,
+            prefix_length=prefix_length,
+        )
 
     out_folder, df = store_parquet(results=results)
 
