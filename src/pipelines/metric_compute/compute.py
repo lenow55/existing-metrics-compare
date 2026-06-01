@@ -65,14 +65,11 @@ def main(args: argparse.Namespace):
     tags: list[str] = []
     tags.append(args.type)
     tags.append(args.metric)
-    if args.cross_model:
-        tags.append("CrossModel")
 
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
         task_name="Logprobs_Scoring",
         task_type=TaskTypes.data_processing,
-        tags=tags,
         reuse_last_task_id=False,
     )
     c_task.set_comment("Вычисление скоров значимости по логпробам")
@@ -90,7 +87,15 @@ def main(args: argparse.Namespace):
         dataset_project="RAG_Metrics",
         partial_name="Logprobs_Mapping",  # Ищет точное или частичное совпадение
     )
-    required_tags = {config.llm.model, str(config.llm.count_logprobs)}
+    required_tags = {config.llm.model, str(config.llm.count_logprobs), args.type}
+    if args.cross_model:
+        required_tags.add("CrossModel")
+        tags.append("CrossModel")
+
+    c_task.set_tags(
+        tags=tags,
+    )
+
     matched_datasets = [
         d for d in datasets_info if required_tags.issubset(set(d.get("tags", [])))
     ]
