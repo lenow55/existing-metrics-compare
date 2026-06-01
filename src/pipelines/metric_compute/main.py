@@ -10,29 +10,33 @@ from clearml import Dataset, Task, TaskTypes
 from pyarrow import Table
 
 from src.evaluators.cmp_cme.config import AppSettings
-from src.schemas import TA_logprob_list, MetricOutput
+from src.metrics.base import map_logprobs2parts
+from src.schemas import (
+    LogprobParts,
+    TA_ans_logprob_list,
+    TA_logprob_list,
+)
 from src.utils.base import (
     configure_logging,
 )
 from src.utils.startup import init_config
-from src.metrics.base import METRICS_HUB, MetricSignature
 
-from .save import store_parquet
+from .save import ExperimentResult, store_parquet
 
 logger = logging.getLogger(__name__)
 
-METRIC_NAME = "token_ll"
 
-
-async def main():
+def main():
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
-        task_name="Token_Metrics",
+        task_name="Logprobs_Mapping",
         task_type=TaskTypes.data_processing,
         tags=["CrossModel"],
         reuse_last_task_id=False,
     )
-    c_task.set_comment("Вычисление метрик по токенам CrossModel")
+    c_task.set_comment(
+        "Мапинг логпробов на разные части входного текста. Подготовка к метрикам"
+    )
 
     config = init_config(conf_type=AppSettings, task=c_task)
     random_state = np.random.RandomState(seed=config.seed)
@@ -52,10 +56,7 @@ async def main():
     passages_file = os.path.join(dataset_path, "passages.json")
     logprobs_file = os.path.join(dataset_path, "logprobs.parquet")
 
-    table: Table = pq.read_table(
-        logprobs_file,
-        columns=["eval_id", "label", "prompt_logprob", "prefix_length", "ok"],
-    )
+    table: Table = pq.read_table(logprobs_file)
     with open(passages_file, "r") as f:
         passages = json.load(f)
 
@@ -70,15 +71,34 @@ async def main():
 
     filtered_table = table.filter(pc.field("ok") == True)
 
+    eval_ids = filtered_table.column("eval_id")
     passage_ids = filtered_table.column("passage_id")
     questions = filtered_table.column("question")
     answers = filtered_table.column("answer")
     prompt_logprobs = filtered_table.column("prompt_logprob")
     prefix_lengths = filtered_table.column("prefix_length")
+    try:
+        top_logprobs = filtered_table.column("top_logprob")
+    except KeyError:
+        top_logprobs = [None] * table.num_rows
 
-    results: list[MetricOutput | None] = []
-    for passage_id, question, answer, prompt_logprob, prefix_length in zip(
-        passage_ids, questions, answers, prompt_logprobs, prefix_lengths
+    results: list[ExperimentResult] = []
+    for (
+        eval_id,
+        passage_id,
+        question,
+        answer,
+        prompt_logprob,
+        prefix_length,
+        top_logprob,
+    ) in zip(
+        eval_ids,
+        passage_ids,
+        questions,
+        answers,
+        prompt_logprobs,
+        prefix_lengths,
+        top_logprobs,
     ):
         passage_id: str = str(passage_id)
         question: str = str(question)
@@ -86,27 +106,34 @@ async def main():
         prefix_length: int = int(prefix_length)
         prompt_logprob = TA_logprob_list.validate_json(prompt_logprob)
 
-        context: str = passages.get(passage_id, "")
-        metric_func = METRICS_HUB.get(METRIC_NAME)
-        if not isinstance(metric_func, MetricSignature):
-            raise RuntimeError(f"try use not defined metric: {METRIC_NAME}")
+        if not top_logprob:
+            top_logprob = []
+        else:
+            top_logprob = TA_ans_logprob_list.validate_json(top_logprob)
 
-        metric_func(
-            logprobs=prompt_logprob,
+        context: str = passages.get(passage_id, "")
+
+        logprob_parts: LogprobParts = map_logprobs2parts(
+            prompt_logprob=prompt_logprob,
+            top_logprob=top_logprob,
             context=context,
             question=question,
             prefix_length=prefix_length,
         )
+        result = ExperimentResult(
+            eval_id=eval_id,
+            instruct=logprob_parts.instruct,
+            context=logprob_parts.context,
+            question=logprob_parts.question,
+            answer=logprob_parts.answer,
+        )
+        results.append(result)
 
-    out_folder, df = store_parquet(results=results)
-
-    logger_c = c_task.get_logger()
-    df_ok = df[df["ok"]]
-    logger_c.report_single_value("ok_rows", df_ok.shape[0])
+    out_folder, _ = store_parquet(results=results)
 
     new_dataset = Dataset.create(
         dataset_name="MuSeRC_QA_logprobs",
-        dataset_project="RAG_Metrics",
+        dataset_project="Logprobs_Mapping",
         dataset_tags=["parquet", config.llm.model, str(config.llm.count_logprobs)],
         use_current_task=True,
         description="Датасет с сгенерированными логпробами",
@@ -122,4 +149,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

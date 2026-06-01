@@ -1,6 +1,6 @@
 import logging
 import os
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from tempfile import mkdtemp
 from typing import Any
 
@@ -8,11 +8,19 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from src.schemas import TA_logprob_list
-
-# from .schemas import ExperimentResult
+from src.schemas import (
+    LogprobParts,
+    TA_logprob_list,
+    TA_logprob_steps_list,
+    TA_prompt_loprobs_list,
+)
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ExperimentResult(LogprobParts):
+    eval_id: int
 
 
 def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
@@ -21,8 +29,17 @@ def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
         d = asdict(r)
         # Валидация структуры через pydantic TypeAdapter и сериализация в JSON.
         # dump_json возвращает bytes -> декодируем в str для хранения в колонке.
-        d["prompt_logprob"] = TA_logprob_list.dump_json(
-            TA_logprob_list.validate_python(d["prompt_logprob"])
+        d["instruct"] = TA_prompt_loprobs_list.dump_json(
+            TA_prompt_loprobs_list.validate_python(d["instruct"])
+        ).decode("utf-8")
+        d["context"] = TA_prompt_loprobs_list.dump_json(
+            TA_prompt_loprobs_list.validate_python(d["context"])
+        ).decode("utf-8")
+        d["question"] = TA_prompt_loprobs_list.dump_json(
+            TA_prompt_loprobs_list.validate_python(d["question"])
+        ).decode("utf-8")
+        d["answer"] = TA_prompt_loprobs_list.dump_json(
+            TA_prompt_loprobs_list.validate_python(d["answer"])
         ).decode("utf-8")
         rows.append(d)
 
@@ -31,14 +48,10 @@ def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
     schema = pa.schema(
         [
             ("eval_id", pa.int64()),
-            ("passage_id", pa.string()),
-            ("label", pa.int32()),
-            ("question", pa.string()),
-            ("answer", pa.string()),
-            ("prompt_logprob", pa.large_string()),  # JSON
-            ("prefix_length", pa.int32()),
-            ("ok", pa.bool_()),
-            ("error", pa.string()),
+            ("instruct", pa.large_string()),  # JSON
+            ("context", pa.large_string()),  # JSON
+            ("question", pa.large_string()),  # JSON
+            ("answer", pa.large_string()),  # JSON
         ]
     )
 
@@ -49,10 +62,10 @@ def store_parquet(results: list[ExperimentResult]) -> tuple[str, pd.DataFrame]:
     logger.info("Размер датасета до экспорта в parquet: %.2f MB", size_mb)
 
     # Создаем уникальную временную директорию
-    temp_dir = mkdtemp(suffix="_logprobs")
+    temp_dir = mkdtemp(suffix="_p_logprobs")
 
     # Формируем полный путь к файлу с нужным именем
-    file_path = os.path.join(temp_dir, "logprobs.parquet")
+    file_path = os.path.join(temp_dir, "logprobs_parted.parquet")
 
     # Записываем таблицу по указанному пути
     pq.write_table(

@@ -47,7 +47,7 @@ def map_logprobs2parts(
     context: str,
     question: str,
     prefix_length: int,
-):
+) -> LogprobParts:
     # 1. Реконструкция текста промпта + карта символ→токен.
     prefix_steps = prompt_logprob[:prefix_length]
     token_text: list[str] = []
@@ -119,3 +119,4 @@ def map_logprobs2parts(
     for step in top_logprob:
         probs = step.top_logprobs
         output.answer.append(probs)
+    return output

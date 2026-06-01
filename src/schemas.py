@@ -122,6 +122,7 @@ TA_ans_logprob_list = TypeAdapter(list[ChatCompletionTokenLogprob])
 
 LogprobStep = Sequence[PromptLogprob | TopLogprob]
 TA_logprob_steps_list = TypeAdapter(list[LogprobStep])
+TA_prompt_loprobs_list = TypeAdapter(list[PromptLogprob])
 
 
 @dataclass(frozen=True)
