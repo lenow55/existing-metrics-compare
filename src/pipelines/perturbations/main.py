@@ -4,6 +4,7 @@ import logging
 import os
 from dataclasses import dataclass
 from tempfile import mkdtemp
+import traceback
 from typing import TypedDict
 
 import numpy as np
@@ -189,9 +190,10 @@ def main(args: argparse.Namespace):
                 rng=rng,
             )
 
-        except RuntimeError:
-            logger.warning(f"Bad scoring in eval_id: {eval_id}")
-            continue
+        except Exception as e:
+            logger.warning(f"Bad scoring in eval_id: {eval_id}, exc: {e}")
+            logger.info(traceback.format_exc())
+            break
         finally:
             counter = counter + 1
             if counter % 100 == 0:

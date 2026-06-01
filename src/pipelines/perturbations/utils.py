@@ -4,24 +4,35 @@ import numpy as np
 from transformers import Pipeline
 
 
+def crop_context_around_masks(text: str, window_words: int = 150) -> str:
+    """
+    Обрезает текст, оставляя вокруг масок <mask> безопасное окно из слов.
+    """
+    words = text.split()
+
+    # Ищем точное попадание тега <mask> внутрь слова
+    mask_indices = [i for i, word in enumerate(words) if "<mask>" in word]
+
+    if not mask_indices:
+        return text  # Если масок почему-то нет, возвращаем текст целиком
+
+    start_idx = max(0, mask_indices[0] - window_words)
+    end_idx = min(len(words), mask_indices[-1] + window_words)
+
+    return " ".join(words[start_idx:end_idx])
+
+
 def replace_masks_with_inverse_probability(
-    text: str,
-    classifier: Pipeline,
-    rng: np.random.Generator,
-    top_k: int = 5,
+    text: str, classifier: Pipeline, rng: np.random.Generator, top_k: int = 5
 ) -> tuple[str, list[str]]:
     """
-    Заменяет маски в тексте токенами, отдавая приоритет МЕНЕЕ вероятным вариантам.
-
-    :param text: Исходный текст с масками (например, "Наступила<mask>, птицы улетели на<mask/>.")
-    :param classifier: Предобученный объект transformers.pipeline("fill-mask")
-    :param rng: Инициализированный генератор случайных чисел NumPy
-    :return: (изменённый_текст, список_вставленных_токенов)
+    Заменяет маски <mask> токенами с инвертированной вероятностью.
+    Идеально сохраняет все внешние пробелы в тексте.
     """
-    # Запускаем предсказание через переданный снаружи классификатор
+    # 1. Получаем предсказания модели
     raw_results = classifier(text, top_k=top_k)
 
-    # Приводим вывод к единому стандарту (список списков результатов для каждой маски)
+    # Приводим к единому формату (список списков)
     if isinstance(raw_results, dict):
         raw_results = [[raw_results]]
     elif (
@@ -29,35 +40,51 @@ def replace_masks_with_inverse_probability(
         and len(raw_results) > 0
         and "score" in raw_results[0]
     ):
-        raw_results = [raw_results]  # pyright: ignore[reportGeneralTypeIssues]
+        raw_results = [raw_results]
 
-    chosen_tokens: list[str] = []
+    chosen_tokens = []
 
-    for mask_predictions in raw_results:  # pyright: ignore[reportGeneralTypeIssues]
-        # 1. Извлекаем токены и их исходные вероятности
-        tokens: list[str] = [pred["token_str"] for pred in mask_predictions]
-        scores = np.array([pred["score"] for pred in mask_predictions])
+    # 2. Расчет инвертированных вероятностей для каждой маски
+    for mask_predictions in raw_results:
+        # Фильтруем пустые строки/токены (бывает на дне топа при больших top_k)
+        valid_preds = [p for p in mask_predictions if p["token_str"].strip()]
+        if not valid_preds:
+            valid_preds = mask_predictions[:1]
 
-        # 2. Инвертируем вероятности (плотность сдвигается к низу топа)
+        tokens = [pred["token_str"] for pred in valid_preds]
+        scores = np.array([pred["score"] for pred in valid_preds])
+
+        # Инвертируем и нормализуем
         inverse_scores = 1.0 - scores
-
-        # 3. Нормализуем распределение
         sum_inverse = np.sum(inverse_scores)
-        if sum_inverse > 0:
-            new_probabilities = inverse_scores / sum_inverse
-        else:
-            new_probabilities = np.ones_like(scores) / len(scores)
 
-        # 4. Делаем случайный выбор токена
+        new_probabilities = (
+            inverse_scores / sum_inverse
+            if sum_inverse > 0
+            else np.ones_like(scores) / len(scores)
+        )
+
+        # Делаем случайный выбор токена
         chosen_token = rng.choice(tokens, p=new_probabilities)
         chosen_tokens.append(chosen_token)
 
-    # 5. Заменяем маски в тексте поочередно.
-    # Регулярное выражение находит и <mask_и <mask/> в любом регистре
-    processed_text: str = text
-    mask_pattern = re.compile(r"(?i)<mask/?>")
+    # 3. Сборка текста: режем строго по вашему тегу <mask>
+    mask_pattern = re.compile(r"(<mask>)")
+    parts = mask_pattern.split(text)
 
-    for token in chosen_tokens:
-        processed_text: str = mask_pattern.sub(token, processed_text, count=1)
+    token_idx = 0
+    final_parts = []
 
-    return processed_text, chosen_tokens
+    for part in parts:
+        if part == "<mask>":
+            if token_idx < len(chosen_tokens):
+                # .strip() убирает внутренние технические пробелы BPE-токенизатора
+                final_parts.append(chosen_tokens[token_idx].strip())
+                token_idx += 1
+            else:
+                final_parts.append(part)
+        else:
+            # Возвращаем куски оригинального текста со ВСЕМИ его пробелами
+            final_parts.append(part)
+
+    return "".join(final_parts), chosen_tokens
