@@ -7,7 +7,7 @@ from clearml import Dataset, Task, TaskTypes
 from pyarrow import Table
 
 from src.evaluators.cmp_cme.config import AppSettings
-from src.metrics.base import METRICS_HUB
+from src.metrics import METRICS_HUB
 from src.schemas import (
     TA_logprob_steps_list,
 )

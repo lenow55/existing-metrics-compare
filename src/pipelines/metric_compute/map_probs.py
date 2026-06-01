@@ -1,16 +1,16 @@
+import argparse
 import json
 import logging
 import os
 
 import numpy as np
-import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from clearml import Dataset, Task, TaskTypes
 from pyarrow import Table
 
 from src.evaluators.cmp_cme.config import AppSettings
-from src.metrics.base import METRICS_HUB, map_logprobs2parts
+from src.metrics import map_logprobs2parts
 from src.schemas import (
     LogprobParts,
     TA_ans_logprob_list,
@@ -19,7 +19,6 @@ from src.schemas import (
 from src.utils.base import (
     configure_logging,
 )
-import argparse
 
 from .save import ExperimentResult, store_parquet
 
