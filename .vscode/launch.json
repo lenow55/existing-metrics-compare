@@ -43,6 +43,17 @@
       "env": {
         "CLEARML_CONFIG_FILE": "./megallm.conf"
       }
+    },
+    {
+      "name": "perturb",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.pipelines.perturbations.main",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": false,
+      "env": {
+        "CLEARML_CONFIG_FILE": "./megallm.conf"
+      }
     }
   ]
 }
