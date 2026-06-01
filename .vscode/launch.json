@@ -32,6 +32,17 @@
       "env": {
         "CLEARML_CONFIG_FILE": "./megallm.conf"
       }
+    },
+    {
+      "name": "map-probs",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.pipelines.metric_compute.map_probs",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": false,
+      "env": {
+        "CLEARML_CONFIG_FILE": "./megallm.conf"
+      }
     }
   ]
 }
