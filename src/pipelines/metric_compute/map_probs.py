@@ -19,7 +19,6 @@ from src.schemas import (
 from src.utils.base import (
     configure_logging,
 )
-from src.utils.startup import init_config
 import argparse
 
 from .save import ExperimentResult, store_parquet
@@ -47,7 +46,7 @@ _ = parser.add_argument(
 _ = parser.add_argument(
     "-s",
     "--cross-model",
-    type=bool,
+    action="store_true",
     required=False,
     default=False,
     help="Флаг генерации CrossModel",
