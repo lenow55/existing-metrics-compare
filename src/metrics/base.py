@@ -67,7 +67,7 @@ def map_logprobs2parts(
 
     # 2. Положения context и question внутри реконструированной строки.
     ctx_marker = "context: "
-    q_marker = "\nquestion: "
+    q_marker = "question: "
     ctx_pos = reconstructed.find(ctx_marker)
     if ctx_pos >= 0:
         ctx_start = ctx_pos + len(ctx_marker)
