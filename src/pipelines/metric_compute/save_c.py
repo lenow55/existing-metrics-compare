@@ -6,15 +6,13 @@ from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-from pydantic import TypeAdapter
 
 from src.schemas import (
+    TA_list_metrics,
     TextUnitMetric,
 )
 
 logger = logging.getLogger(__name__)
-
-TA_list_metrics = TypeAdapter(list[TextUnitMetric])
 
 
 @dataclass(frozen=True)

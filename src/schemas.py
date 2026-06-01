@@ -111,6 +111,8 @@ LogprobStep = Sequence[PromptLogprob | TopLogprob]
 TA_logprob_steps_list = TypeAdapter(list[LogprobStep])
 TA_prompt_loprobs_list = TypeAdapter(list[PromptLogprob])
 
+TA_list_metrics = TypeAdapter(list[TextUnitMetric])
+
 
 @dataclass(frozen=True)
 class LogprobParts:
