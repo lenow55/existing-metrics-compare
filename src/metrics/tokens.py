@@ -37,6 +37,25 @@ def step_token_ll(logprobs: list[LogprobStep]) -> list[TextUnitMetric]:
     return result
 
 
+def step_token_nll(logprobs: list[LogprobStep]) -> list[TextUnitMetric]:
+    """
+    Negative Log Likelihood — logprob фактически выбранного (первого) токена шага.
+    Умноженный на -1.
+    Предыдущий шаг не используется.
+    """
+    result: list[TextUnitMetric] = []
+    for idx, logprob in enumerate(logprobs):
+        value = _logprob(logprob[0])
+        result.append(
+            TextUnitMetric(
+                value=value * (-1),
+                index=idx,
+                text_unit=_token(logprob[0]),
+            )
+        )
+    return result
+
+
 def step_token_inflection(step: LogprobStep, prev: LogprobStep | None) -> float | None:
     """
     Inflection point — разница LL текущего и предыдущего токенов: LL_t - LL_{t-1}.
@@ -72,5 +91,6 @@ def step_token_entropy(
 
 
 register(id="token_ll", f_metric=step_token_ll)
+register(id="token_nll", f_metric=step_token_ll)
 # register(id="token_entropy", f_metric=calculate_token_entropy)
 # register(id="token_inflection", f_metric=calculate_token_inflection)
