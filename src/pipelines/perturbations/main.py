@@ -120,7 +120,7 @@ def main(args: argparse.Namespace):
     # и логпробами по конкретной модели
     datasets_info = Dataset.list_datasets(
         dataset_project="RAG_Metrics",
-        partial_name="Logprobs_Mapping",  # Ищет точное или частичное совпадение
+        partial_name="Logprobs_Scoring",  # Ищет точное или частичное совпадение
     )
 
     required_tags = {
@@ -140,6 +140,7 @@ def main(args: argparse.Namespace):
         logger.info(f"Успешно загружен датасет с тегами: {dataset.tags}")
     else:
         logger.error("Датасет с такими тегами не найден.")
+        logger.info(f"{required_tags}")
         raise RuntimeError
 
     dataset_path = dataset.get_local_copy()
