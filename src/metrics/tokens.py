@@ -91,6 +91,6 @@ def step_token_entropy(
 
 
 register(id="token_ll", f_metric=step_token_ll)
-register(id="token_nll", f_metric=step_token_ll)
+register(id="token_nll", f_metric=step_token_nll)
 # register(id="token_entropy", f_metric=calculate_token_entropy)
 # register(id="token_inflection", f_metric=calculate_token_inflection)
