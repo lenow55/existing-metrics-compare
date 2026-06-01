@@ -5,7 +5,10 @@ from transformers import Pipeline
 
 
 def replace_masks_with_inverse_probability(
-    text: str, classifier: Pipeline, rng: np.random.Generator
+    text: str,
+    classifier: Pipeline,
+    rng: np.random.Generator,
+    top_k: int = 5,
 ) -> tuple[str, list[str]]:
     """
     Заменяет маски в тексте токенами, отдавая приоритет МЕНЕЕ вероятным вариантам.
@@ -16,7 +19,7 @@ def replace_masks_with_inverse_probability(
     :return: (изменённый_текст, список_вставленных_токенов)
     """
     # Запускаем предсказание через переданный снаружи классификатор
-    raw_results = classifier(text)
+    raw_results = classifier(text, top_k=top_k)
 
     # Приводим вывод к единому стандарту (список списков результатов для каждой маски)
     if isinstance(raw_results, dict):
