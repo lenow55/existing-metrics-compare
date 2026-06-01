@@ -1,8 +1,8 @@
 import numpy as np
 from openai.types.chat.chat_completion_token_logprob import TopLogprob
 
-from src.metrics.base import LogprobStep, map_token_metric, register
-from src.schemas import MetricOutput, PromptLogprob
+from src.metrics.base import LogprobStep, register
+from src.schemas import PromptLogprob, TextUnitMetric
 
 
 def _logprob(item: PromptLogprob | TopLogprob) -> float:
@@ -12,14 +12,29 @@ def _logprob(item: PromptLogprob | TopLogprob) -> float:
     return float(item.logprob)
 
 
-def step_token_ll(step: LogprobStep, _prev: LogprobStep | None = None) -> float | None:
+def _token(item: PromptLogprob | TopLogprob) -> str:
+    """Достаёт token-str единообразно из TypedDict и pydantic-модели."""
+    if isinstance(item, dict):
+        return item["decoded_token"]
+    return item.token
+
+
+def step_token_ll(logprobs: list[LogprobStep]) -> list[TextUnitMetric]:
     """
     Log Likelihood — logprob фактически выбранного (первого) токена шага.
     Предыдущий шаг не используется.
     """
-    if not step:
-        return None
-    return _logprob(step[0])
+    result: list[TextUnitMetric] = []
+    for idx, logprob in enumerate(logprobs):
+        value = _logprob(logprob[0])
+        result.append(
+            TextUnitMetric(
+                value=value,
+                index=idx,
+                text_unit=_token(logprob[0]),
+            )
+        )
+    return result
 
 
 def step_token_inflection(step: LogprobStep, prev: LogprobStep | None) -> float | None:
@@ -56,60 +71,6 @@ def step_token_entropy(
     return entropy
 
 
-def calculate_token_ll(
-    *,
-    logprobs: list[LogprobStep],
-    context: str,
-    question: str,
-    prefix_length: int,
-) -> MetricOutput:
-    """Log Likelihood по токенам — обёртка над универсальным маппером."""
-    return map_token_metric(
-        logprobs=logprobs,
-        context=context,
-        question=question,
-        prefix_length=prefix_length,
-        value_fn=step_token_ll,
-    )
-
-
-def calculate_token_entropy(
-    *,
-    logprobs: list[LogprobStep],
-    context: str,
-    question: str,
-    prefix_length: int,
-) -> MetricOutput:
-    """Энтропия Шеннона по токенам — обёртка над универсальным маппером."""
-    return map_token_metric(
-        logprobs=logprobs,
-        context=context,
-        question=question,
-        prefix_length=prefix_length,
-        value_fn=step_token_entropy,
-    )
-
-
-def calculate_token_inflection(
-    *,
-    logprobs: list[LogprobStep],
-    context: str,
-    question: str,
-    prefix_length: int,
-) -> MetricOutput:
-    """
-    Inflection points: для каждого токена — разница LL с предыдущим.
-    Большие по модулю значения указывают на «перегиб» правдоподобия.
-    """
-    return map_token_metric(
-        logprobs=logprobs,
-        context=context,
-        question=question,
-        prefix_length=prefix_length,
-        value_fn=step_token_inflection,
-    )
-
-
-register(id="token_ll", f_metric=calculate_token_ll)
-register(id="token_entropy", f_metric=calculate_token_entropy)
-register(id="token_inflection", f_metric=calculate_token_inflection)
+register(id="token_ll", f_metric=step_token_ll)
+# register(id="token_entropy", f_metric=calculate_token_entropy)
+# register(id="token_inflection", f_metric=calculate_token_inflection)

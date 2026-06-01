@@ -1,27 +1,21 @@
-import json
+import argparse
 import logging
 import os
 
-import numpy as np
-import pyarrow as pa
-import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from clearml import Dataset, Task, TaskTypes
 from pyarrow import Table
 
 from src.evaluators.cmp_cme.config import AppSettings
-from src.metrics.base import METRICS_HUB, map_logprobs2parts
+from src.metrics.base import METRICS_HUB
 from src.schemas import (
-    LogprobParts,
-    TA_ans_logprob_list,
-    TA_logprob_list,
+    TA_logprob_steps_list,
 )
 from src.utils.base import (
     configure_logging,
 )
-import argparse
 
-from .save import ExperimentResult, store_parquet
+from .save_c import ExperimentResult, store_parquet
 
 logger = logging.getLogger(__name__)
 
@@ -60,29 +54,34 @@ def main(args: argparse.Namespace):
         raise RuntimeError("Bad argument for type value")
     if not isinstance(args.cross_model, bool):
         raise RuntimeError("Bad argument for cross-model value")
+    if not isinstance(args.type, str):
+        raise RuntimeError("Bad argument for type value")
+    if not isinstance(args.metric, str):
+        raise RuntimeError("Bad argument for mertic Func")
+
+    if args.metric not in METRICS_HUB:
+        raise RuntimeError(f"Metric {args.metric} not found in HUB {METRICS_HUB}")
 
     tags: list[str] = []
     tags.append(args.type)
+    tags.append(args.metric)
     if args.cross_model:
         tags.append("CrossModel")
 
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
-        task_name="Logprobs_Mapping",
+        task_name="Logprobs_Scoring",
         task_type=TaskTypes.data_processing,
         tags=tags,
         reuse_last_task_id=False,
     )
-    c_task.set_comment(
-        "Мапинг логпробов на разные части входного текста. Подготовка к метрикам"
-    )
+    c_task.set_comment("Вычисление скоров значимости по логпробам")
     with open(args.config, "r") as f:
         conf = AppSettings.model_validate_json(f.read())
     config_dict = conf.model_dump(mode="python")
     config_dict = c_task.connect(config_dict, name="Hyperparameters")
     config = AppSettings(**config_dict)  # pyright: ignore[reportAny]
 
-    random_state = np.random.RandomState(seed=config.seed)
     configure_logging(config.logging_conf_file)
 
     # INFO: получаем датасет с вопросами и контекстами
@@ -105,75 +104,54 @@ def main(args: argparse.Namespace):
 
     dataset_path = dataset.get_local_copy()
     _qa_set_file = os.path.join(dataset_path, "dataset_QA.csv")
-    passages_file = os.path.join(dataset_path, "passages.json")
-    logprobs_file = os.path.join(dataset_path, "logprobs.parquet")
+    _passages_file = os.path.join(dataset_path, "passages.json")
+    logprobs_file = os.path.join(dataset_path, "logprobs_parted.parquet")
 
     table: Table = pq.read_table(logprobs_file)
-    with open(passages_file, "r") as f:
-        passages = json.load(f)
 
-    filtered_table = table.filter(pc.field("ok") == True)
-
-    eval_ids = filtered_table.column("eval_id")
-    passage_ids = filtered_table.column("passage_id")
-    questions = filtered_table.column("question")
-    answers = filtered_table.column("answer")
-    prompt_logprobs = filtered_table.column("prompt_logprob")
-    prefix_lengths = filtered_table.column("prefix_length")
-    try:
-        top_logprobs = filtered_table.column("top_logprob")
-    except KeyError:
-        top_logprobs = [None] * table.num_rows
+    eval_ids = table.column("eval_id")
+    instruct_p = table.column("instruct")
+    context_p = table.column("context")
+    question_p = table.column("question")
+    answer_p = table.column("answer")
 
     results: list[ExperimentResult] = []
+    target_func = METRICS_HUB[args.metric]
+    logger.info(f"User {args.metric} function for scoring")
     for (
         eval_id,
-        passage_id,
+        instruct,
+        context,
         question,
         answer,
-        prompt_logprob,
-        prefix_length,
-        top_logprob,
     ) in zip(
         eval_ids,
-        passage_ids,
-        questions,
-        answers,
-        prompt_logprobs,
-        prefix_lengths,
-        top_logprobs,
+        instruct_p,
+        context_p,
+        question_p,
+        answer_p,
     ):
         eval_id: int = int(eval_id)
-        passage_id: str = str(passage_id)
-        question: str = str(question)
-        answer: str = str(answer)
-        prefix_length: int = int(prefix_length)
-        prompt_logprob = TA_logprob_list.validate_json(prompt_logprob.as_py())
-
-        if not top_logprob:
-            top_logprob = []
-        else:
-            top_logprob = TA_ans_logprob_list.validate_json(top_logprob.as_py())
-
-        context: str = passages.get(passage_id, "")
+        instruct = TA_logprob_steps_list.validate_json(instruct.as_py())
+        context = TA_logprob_steps_list.validate_json(context.as_py())
+        question = TA_logprob_steps_list.validate_json(question.as_py())
+        answer = TA_logprob_steps_list.validate_json(answer.as_py())
 
         try:
-            logprob_parts: LogprobParts = map_logprobs2parts(
-                prompt_logprob=prompt_logprob,
-                top_logprob=top_logprob,
-                context=context,
-                question=question,
-                prefix_length=prefix_length,
-            )
+            instruct_scores = target_func(logprobs=instruct)
+            context_scores = target_func(logprobs=context)
+            question_scores = target_func(logprobs=question)
+            answer_scores = target_func(logprobs=answer)
+
         except RuntimeError:
-            logger.warning(f"Bad question in table {eval_id}")
+            logger.warning(f"Bad scoring in eval_id: {eval_id}")
             continue
         result = ExperimentResult(
             eval_id=eval_id,
-            instruct=logprob_parts.instruct,
-            context=logprob_parts.context,
-            question=logprob_parts.question,
-            answer=logprob_parts.answer,
+            instruct=instruct_scores,
+            context=context_scores,
+            question=question_scores,
+            answer=answer_scores,
         )
         results.append(result)
 
@@ -181,10 +159,15 @@ def main(args: argparse.Namespace):
 
     new_dataset = Dataset.create(
         dataset_project="RAG_Metrics",
-        dataset_name="Logprobs_Mapping",
-        dataset_tags=["parquet", config.llm.model, str(config.llm.count_logprobs)],
+        dataset_name="Logprobs_Scoring",
+        dataset_tags=[
+            "parquet",
+            config.llm.model,
+            str(config.llm.count_logprobs),
+            args.metric,
+        ],
         use_current_task=True,
-        description="Датасет с сгенерированными логпробами",
+        description="Датасет с метриками по логпробам",
         parent_datasets=[dataset],
     )
     _ = new_dataset.add_files(path=out_folder)
@@ -197,4 +180,12 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
+    _ = parser.add_argument(
+        "-m",
+        "--metric",
+        type=str,
+        required=True,
+        help="Имя функции метрики",
+    )
+
     main(parser.parse_args())

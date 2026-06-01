@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import NotRequired, TypedDict
+from typing import TypedDict
 
 from openai.types.chat import ChatCompletionTokenLogprob
 from openai.types.chat.chat_completion_token_logprob import TopLogprob
@@ -21,19 +21,6 @@ class TextUnitMetric(TypedDict):
     """индекс на выходе текстовой единицы"""
     text_unit: str
     """текстовое представление unicode"""
-    position: NotRequired[tuple[int, int]]
-    """
-    (индекс начального символа в исходном тексте, индекс конечного символа в исходном тексте)
-    для частей промпта
-    """
-
-
-@dataclass(frozen=True)
-class MetricOutput:
-    instruct: list[TextUnitMetric]
-    context: list[TextUnitMetric]
-    question: list[TextUnitMetric]
-    answer: list[TextUnitMetric]
 
 
 # INFO: Контейнеры для валидации вывода VLLM

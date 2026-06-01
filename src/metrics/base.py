@@ -5,7 +5,6 @@ from openai.types.chat import ChatCompletionTokenLogprob
 from src.schemas import (
     LogprobParts,
     LogprobStep,
-    MetricOutput,
     PromptLogprob,
     TextUnitMetric,
 )
@@ -25,10 +24,7 @@ class MetricSignature(Protocol):
         self,
         *,
         logprobs: list[LogprobStep],
-        context: str,
-        question: str,
-        prefix_length: int,
-    ) -> MetricOutput: ...
+    ) -> list[TextUnitMetric]: ...
 
 
 METRICS_HUB: dict[str, MetricSignature] = {}
