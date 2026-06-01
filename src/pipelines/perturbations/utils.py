@@ -37,7 +37,7 @@ def replace_masks_with_inverse_probability(
 
         # Если текущее предложение вместе с накопленными превышает 300 слов,
         # сохраняем накопленный чанк и начинаем новый
-        if current_word_count + sentence_word_count >= 300 and current_chunk:
+        if current_word_count + sentence_word_count >= 200 and current_chunk:
             chunks.append("".join(current_chunk))
             current_chunk = [sentence]
             current_word_count = sentence_word_count

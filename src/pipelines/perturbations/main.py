@@ -200,7 +200,7 @@ def main(args: argparse.Namespace):
                 logger.info(f"Processed {counter}/{table.num_rows}")
 
         change_set: dict[int, str] = {}
-        for idx, change in zip(sorted(top_text_idx, reverse=True), changes):
+        for idx, change in zip(sorted(top_text_idx), changes):
             change_set.update({idx: change})
 
         results.append(PtbResult(id=eval_id, context=perturbed, change_set=change_set))
@@ -214,7 +214,7 @@ def main(args: argparse.Namespace):
         for r in results
     ).set_index("id")
 
-    merged_QA_set = qa_dataset.join(df, on="id").set_index("id")
+    merged_QA_set = qa_dataset.join(df, on="id")
     temp_dir = mkdtemp(suffix="_p_logprobs")
     merged_QA_path = os.path.join(temp_dir, "dataset_QA.csv")
     merged_QA_set.to_csv(merged_QA_path, index_label="id")
