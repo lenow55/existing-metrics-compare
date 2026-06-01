@@ -176,8 +176,8 @@ def main(args: argparse.Namespace):
     out_folder, _ = store_parquet(results=results)
 
     new_dataset = Dataset.create(
-        dataset_name="MuSeRC_QA_logprobs",
-        dataset_project="Logprobs_Mapping",
+        dataset_project="RAG_Metrics",
+        dataset_name="Logprobs_Mapping",
         dataset_tags=["parquet", config.llm.model, str(config.llm.count_logprobs)],
         use_current_task=True,
         description="Датасет с сгенерированными логпробами",
