@@ -20,25 +20,69 @@ from src.utils.base import (
     configure_logging,
 )
 from src.utils.startup import init_config
+import argparse
 
 from .save import ExperimentResult, store_parquet
 
 logger = logging.getLogger(__name__)
 
 
-def main():
+parser = argparse.ArgumentParser()
+_ = parser.add_argument(
+    "-c",
+    "--config",
+    type=str,
+    required=False,
+    default="./congig.json",
+    help="Путь до файла с конфигурацией",
+)
+_ = parser.add_argument(
+    "-t",
+    "--type",
+    type=str,
+    required=True,
+    choices=["NoCTX", "CTX", "PTB"],
+    help="Тип прогона: [NoCTX, CTX, PTB]",
+)
+_ = parser.add_argument(
+    "-s",
+    "--cross-model",
+    type=bool,
+    required=False,
+    default=False,
+    help="Флаг генерации CrossModel",
+)
+
+
+def main(args: argparse.Namespace):
+    if not isinstance(args.config, str):
+        raise RuntimeError("Bad argument for config path value")
+    if not isinstance(args.type, str):
+        raise RuntimeError("Bad argument for type value")
+    if not isinstance(args.cross_model, bool):
+        raise RuntimeError("Bad argument for cross-model value")
+
+    tags: list[str] = []
+    tags.append(args.type)
+    if args.cross_model:
+        tags.append("CrossModel")
+
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
         task_name="Logprobs_Mapping",
         task_type=TaskTypes.data_processing,
-        tags=["CrossModel"],
+        tags=tags,
         reuse_last_task_id=False,
     )
     c_task.set_comment(
         "Мапинг логпробов на разные части входного текста. Подготовка к метрикам"
     )
+    with open(args.config, "r") as f:
+        conf = AppSettings.model_validate_json(f.read())
+    config_dict = conf.model_dump(mode="python")
+    config_dict = c_task.connect(config_dict, name="Hyperparameters")
+    config = AppSettings(**config_dict)  # pyright: ignore[reportAny]
 
-    config = init_config(conf_type=AppSettings, task=c_task)
     random_state = np.random.RandomState(seed=config.seed)
     configure_logging(config.logging_conf_file)
 
@@ -149,4 +193,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(parser.parse_args())
