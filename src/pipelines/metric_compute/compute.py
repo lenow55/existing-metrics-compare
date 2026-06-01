@@ -88,7 +88,7 @@ def main(args: argparse.Namespace):
     # и логпробами по конкретной модели
     datasets_info = Dataset.list_datasets(
         dataset_project="RAG_Metrics",
-        partial_name="Build logprobs",  # Ищет точное или частичное совпадение
+        partial_name="Logprobs_Mapping",  # Ищет точное или частичное совпадение
     )
     required_tags = {config.llm.model, str(config.llm.count_logprobs)}
     matched_datasets = [
@@ -164,7 +164,6 @@ def main(args: argparse.Namespace):
             "parquet",
             config.llm.model,
             str(config.llm.count_logprobs),
-            args.metric,
         ],
         use_current_task=True,
         description="Датасет с метриками по логпробам",
