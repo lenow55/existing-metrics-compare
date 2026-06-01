@@ -87,14 +87,23 @@ def main(args: argparse.Namespace):
 
     # INFO: получаем датасет с вопросами и контекстами
     # и логпробами по конкретной модели
-    dataset = Dataset.get(
+    datasets_info = Dataset.list_datasets(
         dataset_project="RAG_Metrics",
-        dataset_name="Build logprobs",
-        dataset_tags=[config.llm.model, str(config.llm.count_logprobs)],
-        alias="logprobs_dataset",
+        partial_name="Build logprobs",  # Ищет точное или частичное совпадение
     )
-    dataset_path = dataset.get_local_copy()
+    required_tags = {config.llm.model, str(config.llm.count_logprobs)}
+    matched_datasets = [
+        d for d in datasets_info if required_tags.issubset(set(d.get("tags", [])))
+    ]
+    if matched_datasets:
+        target_dataset_id = matched_datasets[0]["id"]
+        dataset = Dataset.get(dataset_id=target_dataset_id, alias="logprobs_dataset")
+        logger.info(f"Успешно загружен датасет с тегами: {dataset.tags}")
+    else:
+        logger.error("Датасет с такими тегами не найден.")
+        raise RuntimeError
 
+    dataset_path = dataset.get_local_copy()
     _qa_set_file = os.path.join(dataset_path, "dataset_QA.csv")
     passages_file = os.path.join(dataset_path, "passages.json")
     logprobs_file = os.path.join(dataset_path, "logprobs.parquet")
