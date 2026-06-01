@@ -143,26 +143,31 @@ def main(args: argparse.Namespace):
         prefix_lengths,
         top_logprobs,
     ):
+        eval_id: int = int(eval_id)
         passage_id: str = str(passage_id)
         question: str = str(question)
         answer: str = str(answer)
         prefix_length: int = int(prefix_length)
-        prompt_logprob = TA_logprob_list.validate_json(prompt_logprob)
+        prompt_logprob = TA_logprob_list.validate_json(prompt_logprob.as_py())
 
         if not top_logprob:
             top_logprob = []
         else:
-            top_logprob = TA_ans_logprob_list.validate_json(top_logprob)
+            top_logprob = TA_ans_logprob_list.validate_json(top_logprob.as_py())
 
         context: str = passages.get(passage_id, "")
 
-        logprob_parts: LogprobParts = map_logprobs2parts(
-            prompt_logprob=prompt_logprob,
-            top_logprob=top_logprob,
-            context=context,
-            question=question,
-            prefix_length=prefix_length,
-        )
+        try:
+            logprob_parts: LogprobParts = map_logprobs2parts(
+                prompt_logprob=prompt_logprob,
+                top_logprob=top_logprob,
+                context=context,
+                question=question,
+                prefix_length=prefix_length,
+            )
+        except RuntimeError:
+            logger.warning(f"Bad question in table {eval_id}")
+            continue
         result = ExperimentResult(
             eval_id=eval_id,
             instruct=logprob_parts.instruct,

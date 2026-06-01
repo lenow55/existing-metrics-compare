@@ -88,9 +88,16 @@ def map_logprobs2parts(
     ctx_token_ids = set(ctx_slice)
     q_token_ids = set(q_slice)
 
+    if len(q_slice) == 0:
+        raise RuntimeError("question is empty tokens")
+
     output = LogprobParts(instruct=[], context=[], question=[], answer=[])
     # 4. Распределяем токены префикса по сегментам.
-    first_not_instruct = min(min(ctx_token_ids), min(q_token_ids))
+    if len(ctx_token_ids):
+        first_not_instruct = min(min(ctx_token_ids), min(q_token_ids))
+    else:
+        first_not_instruct = min(q_token_ids)
+
     for idx, tok in enumerate(token_text):
         if idx < first_not_instruct:
             probs = prefix_steps[idx]

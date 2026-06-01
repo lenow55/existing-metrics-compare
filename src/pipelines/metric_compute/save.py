@@ -10,8 +10,6 @@ import pyarrow.parquet as pq
 
 from src.schemas import (
     LogprobParts,
-    TA_logprob_list,
-    TA_logprob_steps_list,
     TA_prompt_loprobs_list,
 )
 
