@@ -44,4 +44,5 @@ torch = { source = "pytorch_cu132", version = "^2.10.0" }
 
 [tool.poetry.group.dev.dependencies]
 pyarrow-stubs = "^20.0.0.20251215"
+scipy-stubs = "^1.17.1.5"
 

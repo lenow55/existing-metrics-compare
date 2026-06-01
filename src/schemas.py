@@ -1,6 +1,9 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import NotRequired, TypedDict
 
+from openai.types.chat import ChatCompletionTokenLogprob
+from openai.types.chat.chat_completion_token_logprob import TopLogprob
 from pydantic import BaseModel, Field, TypeAdapter
 
 # INFO: Контейнеры метрики text unit
@@ -115,3 +118,15 @@ class ReadingComprehensionItem(BaseModel):
 
 
 TA_logprob_list = TypeAdapter(list[None | dict[str, PromptLogprob]])
+TA_ans_logprob_list = TypeAdapter(list[ChatCompletionTokenLogprob])
+
+LogprobStep = Sequence[PromptLogprob | TopLogprob]
+TA_logprob_steps_list = TypeAdapter(list[LogprobStep])
+
+
+@dataclass(frozen=True)
+class LogprobParts:
+    instruct: list[list[PromptLogprob]]
+    context: list[list[PromptLogprob]]
+    question: list[list[PromptLogprob]]
+    answer: list[LogprobStep]

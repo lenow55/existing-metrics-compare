@@ -1111,7 +1111,7 @@ description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "sys_platform == \"win32\" and platform_machine == \"AMD64\" or sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"x86_64\") or (sys_platform != \"win32\" or platform_machine != \"AMD64\") and (sys_platform != \"linux\" or platform_machine != \"aarch64\" and platform_machine != \"x86_64\") and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
+markers = "sys_platform == \"win32\" and platform_machine == \"AMD64\" or sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"x86_64\") or platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\""
 files = [
     {file = "greenlet-3.5.0-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:29ea813b2e1f45fa9649a17853b2b5465c4072fbcb072e5af6cd3a288216574a"},
     {file = "greenlet-3.5.0-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:804a70b328e706b785c6ef16187051c394a63dd1a906d89be24b6ad77759f13f"},
@@ -1197,7 +1197,7 @@ description = "Fast transfer of large files with the Hugging Face Hub."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "sys_platform == \"win32\" and platform_machine == \"AMD64\" or sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"x86_64\") or (sys_platform != \"win32\" or platform_machine != \"AMD64\") and (sys_platform != \"linux\" or platform_machine != \"aarch64\" and platform_machine != \"x86_64\") and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"
+markers = "sys_platform == \"win32\" and platform_machine == \"AMD64\" or sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"x86_64\") or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\""
 files = [
     {file = "hf_xet-1.5.0-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:7d70fe2ce97b9db73b9c9b9c81fe3693640aec83416a966c446afea54acfae3c"},
     {file = "hf_xet-1.5.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:73a0dae8c71de3b0633a45c73f4a4a5ed09e94b43441d82981a781d4f12baa42"},
@@ -2525,7 +2525,7 @@ version = "2.4.4"
 description = "Fundamental package for array computing in Python"
 optional = false
 python-versions = ">=3.11"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "numpy-2.4.4-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f983334aea213c99992053ede6168500e5f086ce74fbc4acc3f2b00f5762e9db"},
     {file = "numpy-2.4.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:72944b19f2324114e9dc86a159787333b77874143efcf89a5167ef83cfee8af0"},
@@ -2602,13 +2602,28 @@ files = [
 ]
 
 [[package]]
+name = "numpy-typing-compat"
+version = "20251206.2.4"
+description = "Static typing compatibility layer for older versions of NumPy"
+optional = false
+python-versions = ">=3.11"
+groups = ["dev"]
+files = [
+    {file = "numpy_typing_compat-20251206.2.4-py3-none-any.whl", hash = "sha256:a82e723bd20efaa4cf2886709d4264c144f1f2b609bda83d1545113b7e47a5b5"},
+    {file = "numpy_typing_compat-20251206.2.4.tar.gz", hash = "sha256:59882d23aaff054a2536da80564012cdce33487657be4d79c5925bb8705fcabc"},
+]
+
+[package.dependencies]
+numpy = ">=2.4rc1,<2.5"
+
+[[package]]
 name = "nvidia-cublas"
 version = "13.4.0.1"
 description = "CUBLAS native runtime libraries"
 optional = false
 python-versions = ">=3"
 groups = ["torch"]
-markers = "sys_platform == \"win32\" and platform_machine == \"AMD64\" and platform_system == \"Linux\" or sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"x86_64\") and platform_system == \"Linux\""
+markers = "(sys_platform == \"win32\" and platform_machine == \"AMD64\" or sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"x86_64\")) and platform_system == \"Linux\""
 files = [
     {file = "nvidia_cublas-13.4.0.1-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:705d7d214fbb20f134415ecadc488abf74f444c155a6555dec5687404afb18a9"},
     {file = "nvidia_cublas-13.4.0.1-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:53bf22e2ccbf644db74b6cc21cea7f5efb1a52aa64515438b430abbd05af4106"},
@@ -2625,7 +2640,7 @@ description = "CUBLAS native runtime libraries"
 optional = false
 python-versions = ">=3"
 groups = ["torch"]
-markers = "(sys_platform != \"win32\" or platform_machine != \"AMD64\") and platform_system == \"Linux\" and (sys_platform != \"linux\" or platform_machine != \"aarch64\" and platform_machine != \"x86_64\")"
+markers = "platform_system == \"Linux\""
 files = [
     {file = "nvidia_cublas-13.4.1.1-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:6351d2d921527479d6d5002e620fe1971d3e10c730b544c02a36d65301efb00d"},
     {file = "nvidia_cublas-13.4.1.1-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:28c983c8c03aa9a2d7b36cddcef2bfeeea85e13241d77df7622665502159f347"},
@@ -2868,6 +2883,25 @@ aiohttp = ["aiohttp", "httpx-aiohttp (>=0.1.9)"]
 datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
 realtime = ["websockets (>=13,<16)"]
 voice-helpers = ["numpy (>=2.0.2)", "sounddevice (>=0.5.1)"]
+
+[[package]]
+name = "optype"
+version = "0.17.1"
+description = "Building Blocks for Precise & Flexible Type Hints"
+optional = false
+python-versions = ">=3.11"
+groups = ["dev"]
+files = [
+    {file = "optype-0.17.1-py3-none-any.whl", hash = "sha256:82f2508ca31cb21e53a41648482d890fe1f5c6cb153720551af41161555adaf1"},
+    {file = "optype-0.17.1.tar.gz", hash = "sha256:07bfa32b795dea28fba8605a6288d36370d072f25183fb9c29b5a90f4b6f5638"},
+]
+
+[package.dependencies]
+numpy = {version = ">=1.26,<2.7", optional = true, markers = "extra == \"numpy\""}
+numpy-typing-compat = {version = ">=20250818.1.25,<20251207", optional = true, markers = "extra == \"numpy\""}
+
+[package.extras]
+numpy = ["numpy (>=1.26,<2.7)", "numpy-typing-compat (>=20250818.1.25,<20251207)"]
 
 [[package]]
 name = "orderedmultidict"
@@ -4713,6 +4747,24 @@ doc = ["intersphinx_registry", "jupyterlite-pyodide-kernel", "jupyterlite-sphinx
 test = ["Cython", "array-api-strict (>=2.3.1)", "asv", "gmpy2", "hypothesis (>=6.30)", "meson", "mpmath", "ninja ; sys_platform != \"emscripten\"", "pooch", "pytest (>=8.0.0)", "pytest-cov", "pytest-timeout", "pytest-xdist", "scikit-umfpack", "threadpoolctl"]
 
 [[package]]
+name = "scipy-stubs"
+version = "1.17.1.5"
+description = "Type annotations for SciPy"
+optional = false
+python-versions = ">=3.11"
+groups = ["dev"]
+files = [
+    {file = "scipy_stubs-1.17.1.5-py3-none-any.whl", hash = "sha256:58ebf054a86c000c72e8982e121c4ead0d3d9ba7a6c38aa5fa71b07f96a427fd"},
+    {file = "scipy_stubs-1.17.1.5.tar.gz", hash = "sha256:284b1dd1dd46107a614971d170030d310cd88b2ac6b483f85285ee0ff87720bd"},
+]
+
+[package.dependencies]
+optype = {version = ">=0.14.0,<0.18", extras = ["numpy"]}
+
+[package.extras]
+scipy = ["scipy (>=1.17.1,<1.18)"]
+
+[[package]]
 name = "setuptools"
 version = "81.0.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -5940,4 +5992,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "cf5e49ee6bc655a3b8c027957c2c75c22b404b4ad4dcd9f4bdb0c9f73894acd1"
+content-hash = "aa0392eadde16975c3c73f8f0b0154aebe91ec5d0f742eefe3e53e635f711785"
