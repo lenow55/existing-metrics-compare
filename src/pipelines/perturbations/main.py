@@ -222,7 +222,7 @@ def main(args: argparse.Namespace):
         dataset_tags=[
             config.llm.model,
             str(config.llm.count_logprobs),
-            str(args.perturbs),
+            f"ptb{args.perturbs}",
         ],
         use_current_task=True,
         description="Датасет с метриками по логпробам",
