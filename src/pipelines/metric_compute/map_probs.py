@@ -89,6 +89,7 @@ def main(args: argparse.Namespace):
     datasets_info = Dataset.list_datasets(
         dataset_project="RAG_Metrics",
         partial_name="Build logprobs",  # Ищет точное или частичное совпадение
+        include_archived=False,
     )
     required_tags = {config.llm.model, str(config.llm.count_logprobs)}
     matched_datasets = [
