@@ -81,7 +81,6 @@ def main(args: argparse.Namespace):
     config_dict = c_task.connect(config_dict, name="Hyperparameters")
     config = AppSettings(**config_dict)  # pyright: ignore[reportAny]
 
-    random_state = np.random.RandomState(seed=config.seed)
     configure_logging(config.logging_conf_file)
 
     # INFO: получаем датасет с вопросами и контекстами
@@ -91,7 +90,7 @@ def main(args: argparse.Namespace):
         partial_name="Build logprobs",  # Ищет точное или частичное совпадение
         include_archived=False,
     )
-    required_tags = {config.llm.model, str(config.llm.count_logprobs)}
+    required_tags = {config.llm.model, str(config.llm.count_logprobs), args.type}
     matched_datasets = [
         d for d in datasets_info if required_tags.issubset(set(d.get("tags", [])))
     ]
