@@ -122,6 +122,7 @@ def main(args: argparse.Namespace):
     datasets_info = Dataset.list_datasets(
         dataset_project="RAG_Metrics",
         partial_name="Logprobs_Scoring",  # Ищет точное или частичное совпадение
+        include_archived=False,
     )
 
     required_tags = {
