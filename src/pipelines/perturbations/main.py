@@ -193,7 +193,7 @@ def main(args: argparse.Namespace):
         except Exception as e:
             logger.warning(f"Bad scoring in eval_id: {eval_id}, exc: {e}")
             logger.info(traceback.format_exc())
-            break
+            continue
         finally:
             counter = counter + 1
             if counter % 100 == 0:
