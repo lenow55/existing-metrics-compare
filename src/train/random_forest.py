@@ -104,7 +104,7 @@ def main(args: argparse.Namespace):
 
     classifier_report_plan(
         y_true=y_test,
-        y_score=y_pred,
+        y_score=y_pred[:, 1],
         index=train_df.index.values[idx_test],
         logger_c=logger_c,
         metric_name="Предлагаемая Модель",
