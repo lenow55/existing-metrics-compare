@@ -28,7 +28,7 @@ def main(args: argparse.Namespace):
 
     c_task: Task = Task.init(
         project_name="RAG_Metrics",
-        task_name="Logprobs_Mapping",
+        task_name="RandomForest",
         task_type=TaskTypes.training,
         reuse_last_task_id=False,
     )
@@ -39,6 +39,7 @@ def main(args: argparse.Namespace):
         alias="train_dataset",
     )
     dataset_path = dataset.get_local_copy()
+    c_task.set_tags(tags=dataset.tags)
 
     train_file = os.path.join(dataset_path, "train.parquet")
     train_df = pd.read_parquet(train_file, engine="pyarrow")
