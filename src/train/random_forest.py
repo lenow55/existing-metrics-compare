@@ -114,3 +114,7 @@ def main(args: argparse.Namespace):
     _ = c_task.flush(wait_for_uploads=True)
     _ = c_task.mark_completed(status_message="completed")
     c_task.close()
+
+
+if __name__ == "__main__":
+    main(parser.parse_args())
