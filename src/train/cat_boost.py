@@ -92,7 +92,7 @@ def main(args: argparse.Namespace):
         iterations=1000,
         loss_function="Logloss",
         eval_metric="Logloss",
-        custom_metric=["AUC", "f1"],
+        custom_metric=["AUC", "F1"],
         random_seed=42,
         thread_count=-1,  # использование всех ядер процессора
         verbose=False,
