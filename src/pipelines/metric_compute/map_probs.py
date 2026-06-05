@@ -160,7 +160,6 @@ def main(args: argparse.Namespace):
             logprob_parts: LogprobParts = map_logprobs2parts(
                 prompt_logprob=prompt_logprob,
                 top_logprob=top_logprob,
-                context=context,
                 question=question,
                 prefix_length=prefix_length,
             )

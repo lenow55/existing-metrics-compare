@@ -40,7 +40,6 @@ def map_logprobs2parts(
     *,
     prompt_logprob: list[None | dict[str, PromptLogprob]],
     top_logprob: list[ChatCompletionTokenLogprob],
-    context: str,
     question: str,
     prefix_length: int,
 ) -> LogprobParts:
@@ -67,16 +66,22 @@ def map_logprobs2parts(
     ctx_pos = reconstructed.find(ctx_marker)
     if ctx_pos >= 0:
         ctx_start = ctx_pos + len(ctx_marker)
-        ctx_end = ctx_start + len(context)
     else:
-        ctx_start = ctx_end = -1
+        ctx_start = -1
 
-    q_pos = reconstructed.find(q_marker, ctx_end if ctx_end >= 0 else 0)
+    q_pos = reconstructed.find(q_marker, ctx_start if ctx_start >= 0 else 0)
     if q_pos >= 0:
         q_start = q_pos + len(q_marker)
         q_end = q_start + len(question)
     else:
         q_start = q_end = -1
+
+    # Конечный индекс контекста определяется по найденной позиции вопроса,
+    # а не по длине входного context.
+    if ctx_start >= 0:
+        ctx_end = q_pos if q_pos >= 0 else len(reconstructed)
+    else:
+        ctx_end = -1
     #
     # 3. Слайсы карты символ→токен и множества индексов для быстрых проверок.
     ctx_slice = char_to_token[ctx_start:ctx_end] if ctx_start >= 0 else []

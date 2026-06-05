@@ -74,14 +74,12 @@ def main(args: argparse.Namespace):
 
     dataset_path = dataset.get_local_copy()
     _qa_set_file = os.path.join(dataset_path, "dataset_QA.csv")
-    passages_file = os.path.join(dataset_path, "passages.json")
+    _passages_file = os.path.join(dataset_path, "passages.json")
     logprobs_file = os.path.join(dataset_path, "logprobs.parquet")
 
     configure_logging(config.logging_conf_file)
 
     table: Table = pq.read_table(logprobs_file)
-    with open(passages_file, "r") as f:
-        passages = json.load(f)
 
     filtered_table = table.filter(pc.field("ok") == True)
 
@@ -126,13 +124,10 @@ def main(args: argparse.Namespace):
         else:
             top_logprob = TA_ans_logprob_list.validate_json(top_logprob.as_py())
 
-        context: str = passages.get(passage_id, "")
-
         try:
             logprob_parts: LogprobParts = map_logprobs2parts(
                 prompt_logprob=prompt_logprob,
                 top_logprob=top_logprob,
-                context=context,
                 question=question,
                 prefix_length=prefix_length,
             )
