@@ -18,7 +18,7 @@ _ = parser.add_argument(
     "--dataset",
     type=str,
     required=True,
-    help="ID датасета с пертурбацией",
+    help="ID датасета для обучения",
 )
 
 
