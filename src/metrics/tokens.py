@@ -66,31 +66,59 @@ def step_token_inflection(step: LogprobStep, prev: LogprobStep | None) -> float 
     return _logprob(step[0]) - _logprob(prev[0])
 
 
-def step_token_entropy(
-    step: LogprobStep, _prev: LogprobStep | None = None
-) -> float | None:
+def step_token_entropy(logprobs: list[LogprobStep]) -> list[TextUnitMetric]:
     """
     Рассчитывает энтропию Шеннона (в битах) на основе Top-K logprobs шага.
     Формула: H = - sum(p * log2(p)). Предыдущий шаг не используется.
     """
-    if not step:
-        return None
+    result: list[TextUnitMetric] = []
+    for idx, step in enumerate(logprobs):
+        actual_token = _token(step[0])
+        step_logprobs = [_logprob(i) for i in step]
+        step_logprobs_a = np.array(step_logprobs, dtype=np.float64)
 
-    # OpenAI возвращает logprob (натуральный логарифм), конвертируем в вероятность
-    probs_arr = np.array([np.exp(_logprob(item)) for item in step], dtype=float)
-    total = float(np.sum(probs_arr))
-    if total <= 0:
-        return None
+        K = len(step_logprobs)
+        if K <= 1:
+            # Нет неопределенности, если токен всего один
+            result.append(
+                TextUnitMetric(
+                    value=0.0,
+                    index=idx,
+                    text_unit=actual_token,
+                )
+            )
 
-    # Нормализуем вероятности, так как у нас только Top-K, а не полный словарь.
-    # Это даёт аппроксимацию энтропии.
-    probs_norm = probs_arr / total
+        # 1. Нахождение максимального логпроба (M)
+        max_logprob = np.max(step_logprobs_a)
 
-    entropy = -float(np.sum(probs_norm * np.log2(probs_norm + 1e-9)))
-    return entropy
+        # 2. Вычисление знаменателя сдвинутых экспонент (Log-Sum-Exp)
+        # Вычитание max_logprob защищает от underflow/overflow
+        lse = max_logprob + np.log(np.sum(np.exp(step_logprobs_a - max_logprob)))
+
+        # 3. Получение нормализованных логпробов
+        normalized_logprobs = step_logprobs_a - lse
+
+        # 4. Перевод в вероятности (безопасно, так как максимум равен 0)
+        normalized_probs = np.exp(normalized_logprobs)
+
+        # 5. Расчет энтропии Шеннона
+        entropy = -np.sum(normalized_probs * normalized_logprobs)
+
+        # 6. Нормализация до [0, 1]
+        entropy = entropy / np.log(K)
+
+        result.append(
+            TextUnitMetric(
+                value=float(entropy),
+                index=idx,
+                text_unit=actual_token,
+            )
+        )
+
+    return result
 
 
 register(id="token_ll", f_metric=step_token_ll)
 register(id="token_nll", f_metric=step_token_nll)
-# register(id="token_entropy", f_metric=calculate_token_entropy)
+register(id="token_entropy", f_metric=step_token_entropy)
 # register(id="token_inflection", f_metric=calculate_token_inflection)
