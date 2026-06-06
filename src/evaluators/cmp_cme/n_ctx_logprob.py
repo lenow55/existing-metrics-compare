@@ -96,7 +96,7 @@ async def main():
         project_name="RAG_Metrics",
         task_name="Build logprobs",
         task_type=TaskTypes.testing,
-        tags=["build", "Logprobs", "CrossModel"],
+        tags=["NoCTX", "CrossModel"],
         reuse_last_task_id=False,
     )
     c_task.set_comment("Вычисление датасета логпробов на модели CrossModel")

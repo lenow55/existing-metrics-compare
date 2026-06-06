@@ -118,7 +118,7 @@ async def main(args: argparse.Namespace):
         project_name="RAG_Metrics",
         task_name="Build logprobs",
         task_type=TaskTypes.testing,
-        tags=["build"],
+        # tags=[],
         reuse_last_task_id=False,
     )
     c_task.set_comment(
