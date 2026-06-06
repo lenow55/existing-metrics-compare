@@ -1,8 +1,8 @@
 import numpy as np
 from openai.types.chat.chat_completion_token_logprob import TopLogprob
 
-from src.metrics.base import LogprobStep, register
-from src.schemas import PromptLogprob, TextUnitMetric
+from src.metrics.base import register
+from src.schemas import LogprobStep, PromptLogprob, TextUnitMetric
 
 
 def _logprob(item: PromptLogprob | TopLogprob) -> float:
@@ -68,8 +68,7 @@ def step_token_inflection(step: LogprobStep, prev: LogprobStep | None) -> float 
 
 def step_token_entropy(logprobs: list[LogprobStep]) -> list[TextUnitMetric]:
     """
-    Рассчитывает энтропию Шеннона (в битах) на основе Top-K logprobs шага.
-    Формула: H = - sum(p * log2(p)). Предыдущий шаг не используется.
+    Рассчитывает энтропию Шеннона
     """
     result: list[TextUnitMetric] = []
     for idx, step in enumerate(logprobs):
